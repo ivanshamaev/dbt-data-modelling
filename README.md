@@ -8,20 +8,26 @@ dbt-модели RetailCo (пять контуров методологий) и 
 ## Структура
 
 ```
-dbt/               dbt-проект retailco: bronze + 5 контуров
-  models/bronze/      общий инжест источников (нейтральный)
-  models/inmon/       Inmon: staging → 3NF (int_*) → dm_*
-  models/kimball/     Kimball: staging → звезда (dim/fct/agg/obt) → km_*
-  models/vault/       Data Vault: staging → HUB/LINK/SAT → PIT → im_*
-  models/anchor/      Anchor: staging → ядро → views/marts
-  models/medallion/   Medallion: bronze → silver → gold
-  macros/ tests/ snapshots/ profiles.yml packages.yml
-docker-compose.yml стенд: postgres (erp/crm) + rustfs + lakekeeper + starrocks + dbt
-docker/dbt.Dockerfile  образ dbt-runner (dbt-core 1.12.5 + dbt-starrocks)
-.env                   переменные стенда
-Makefile               цели запуска (up, build, kpi, reconcile, …)
-scripts/ sql/ queries/ tests/   DDL источников, генератор, проверки, KPI
-kubernetes/           kubeconfig тестового кластера + как подключаться
+dbt/                 dbt-проект retailco: bronze + 5 контуров
+  models/bronze/     общий инжест источников (нейтральный)
+  models/inmon/      Inmon: staging → 3NF (int_*) → dm_*
+  models/kimball/    Kimball: staging → звезда (dim/fct/agg/obt) → km_*
+  models/vault/      Data Vault: staging → HUB/LINK/SAT → PIT → im_*
+  models/anchor/     Anchor: staging → ядро → views/marts
+  models/medallion/  Medallion: bronze → silver → gold
+  macros/            кастомные макросы (multicatalog, materializations, hash)
+  tests/             singular-тесты контуров (bronze/звезда/vault)
+  snapshots/         снапшоты (сейчас отключены)
+  profiles.yml       профиль StarRocks; packages.yml — зависимость dbt_utils
+docker-compose.yml   стенд: postgres (erp/crm) + rustfs + lakekeeper + starrocks + dbt
+docker/              образ dbt-runner: dbt.Dockerfile (dbt-core 1.12.5 + dbt-starrocks)
+.env                 переменные стенда
+Makefile             цели запуска (up, build, kpi, reconcile, …)
+scripts/             скрипты проверок и операций (contours-check, reload-day, отчёты)
+sql/                 DDL источников, генератор данных, каталоги StarRocks
+queries/             13 KPI-запросов, бенчмарки, ресурсные отчёты
+tests/               reconcile, сценарии приёмки, контракты источников
+kubernetes/          kubeconfig тестового кластера + как подключаться
 ```
 
 ## Запуск локально
