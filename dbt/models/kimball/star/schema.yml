@@ -1,0 +1,218 @@
+version: 2
+
+# ============================================================================
+# Контракт gold · измерения (L4.3): уникальность SK, справочники, SCD-дисциплина.
+#   • SK строк версий уникальны; durable SK идентичности not_null;
+#   • ровно одна is_current-версия на сущность — singular
+#     dims_single_current_version.sql (жёсткий fail: это регрессия механики);
+#   • relationships категорий и значений справочников.
+# ============================================================================
+
+models:
+  - name: dim_customer
+    description: >
+      Клиенты со SCD2: полная реконструкция из собственной kim_customer_history.
+      KPI №7: последнее известное состояние сегмента дня заказа выбирается join'ом
+      факта к customer_sk_v строки версии.
+    columns:
+      - name: customer_sk_v
+        description: SK строки версии = md5(customer_id | valid_from)
+        data_tests: [unique, not_null]
+      - name: customer_key
+        description: durable-ключ; в SCD2 повторяется по версиям — уникальна пара с valid_from
+        data_tests: [not_null]
+      - name: customer_id
+        data_tests: [not_null]
+      - name: segment
+        data_tests:
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+      - name: valid_from
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_key, valid_from]
+
+  - name: dim_date
+    description: Календарь 2023-01-01 … current_date+1год (PK date_day).
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: year_month
+        data_tests: [not_null]
+
+  - name: dim_store
+    description: Магазины; жизненный цикл в valid_from/valid_to (паттерн №6), без SCD2.
+    columns:
+      - name: store_key
+        data_tests: [unique, not_null]
+      - name: store_id
+        data_tests: [unique, not_null]
+      - name: format
+        data_tests:
+          - accepted_values:
+              values: ['mall', 'street', 'online']
+
+  - name: dim_product
+    description: >
+      Товары со SCD2 по категории (паттерн №5) + flatten иерархии category_l1..l3;
+      версии из собственной kim_product_category_history; без зависимости от Inmon.
+    columns:
+      - name: product_sk_v
+        data_tests: [unique, not_null]
+      - name: product_key
+        description: durable-ключ; в SCD2 повторяется по версиям — уникальна пара с valid_from
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: category_id
+        data_tests:
+          - relationships:
+              to: ref('stg_kim_erp__categories')
+              field: category_id
+      - name: category_l3
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [product_key, valid_from]
+
+  - name: dim_promo
+    description: Промо CRM со SCD2 (ретро-коррекции №3 из второго источника); promo_id НЕ уникален — версии!
+    columns:
+      - name: promo_sk_v
+        data_tests: [unique, not_null]
+      - name: promo_key
+        data_tests: [not_null]
+      - name: mechanics
+        data_tests:
+          - accepted_values:
+              values: ['percent', 'fixed', 'bundle']
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['planned', 'active', 'closed']
+
+  - name: vw_dim_order_date
+    description: 'Role-playing: дата заказа.'
+  - name: vw_dim_paid_date
+    description: 'Role-playing: дата оплаты.'
+  - name: vw_dim_delivered_date
+    description: 'Role-playing: дата доставки.'
+
+  - name: fct_sales
+    description: >
+      Transaction fact на гранулярности строки заказа. Семантика выручки:
+      is_current, статусы paid/shipped/delivered/returned (синхронизирована
+      с 3NF-запросом и vault-том). SK-ключи — версии измерений на дату заказа
+      (valid_time join): KPI №7 решается ключом, без оконных функций.
+    columns:
+      - name: order_line_key
+        data_tests: [unique, not_null]
+      - name: order_no
+        data_tests: [not_null]
+      - name: customer_sk_v
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_sk_v
+      - name: product_sk_v
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_sk_v
+      - name: store_key
+        data_tests:
+          - relationships:
+              to: ref('dim_store')
+              field: store_key
+      - name: line_amount
+        data_tests: [not_null]
+      - name: order_date
+        data_tests: [not_null]
+
+  - name: fct_payments
+    description: 'Факт платежей (паттерн №9): гранулярность платежа, сплиты = строки.'
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+      - name: order_no
+        data_tests: [not_null]
+      - name: method
+        data_tests:
+          - accepted_values:
+              values: ['card', 'cash', 'online', 'gift']
+      - name: payment_status
+        data_tests:
+          - accepted_values:
+              values: ['authorized', 'captured', 'refunded']
+
+  - name: fct_returns
+    description: 'Факт возвратов строк (паттерн №8): частичные возвраты, своя гранулярность.'
+    columns:
+      - name: return_id
+        data_tests: [unique, not_null]
+      - name: order_line_key
+        data_tests:
+          - not_null
+          # relationships → fct_sales заменён пороговым singular-тестом
+          # star_returns_in_sales (cancelled-после-оплаты не входят в выручку)
+      - name: order_no
+        data_tests: [not_null]
+      - name: product_sk_v
+        data_tests:
+          - relationships:
+              to: ref('dim_product')
+              field: product_sk_v
+      - name: return_qty
+        data_tests: [not_null]
+
+  - name: fct_inventory_daily
+    description: >
+      Periodic snapshot остатков: полуаддитивный факт (суммировать только
+      внутри дня). «Дыры» матрицы ассортимента — фича (KPI №9).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [snap_date, store_id, product_id]
+    columns:
+      - name: snap_date
+        data_tests: [not_null]
+      - name: qty_on_hand
+        data_tests: [not_null]
+
+  - name: fct_order_lifecycle
+    description: >
+      Accumulating snapshot (паттерн №2): одна строка на заказ, вехи и лаги
+      между этапами; KPI №4 — прямой SELECT.
+    columns:
+      - name: order_key
+        data_tests: [unique, not_null]
+      - name: current_status
+        data_tests:
+          - accepted_values:
+              values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
+
+  - name: fct_assortment_coverage
+    description: Factless факт «ассортиментное покрытие» (SKU × магазин × день) — view над inventory.
+
+  - name: obt_sales
+    description: >
+      One Big Table — паттерн подачи: fct_sales + денормализованные измерения
+      + промо-атрибуты CRM (KPI №13). Упрощение «один промо на заказ» оговорено.
+    columns:
+      - name: order_line_key
+        data_tests: [unique, not_null]
+      - name: segment
+        data_tests:
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+
+  - name: agg_sales_daily
+    description: Инкрементальная витрина KPI №12 (вчера против недели назад), окно 3 дня.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [sales_date, store_key, channel]
+    columns:
+      - name: revenue_amt
+        data_tests: [not_null]

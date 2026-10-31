@@ -1,0 +1,11 @@
+.env.local
+target/
+dbt_target/
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,18 @@
+# Артефакты dbt и несобираемые jinja-конструкции (docs/format-recommendation.md §5)
+target/
+dbt_packages/
+logs/
+# {% materialization %}-блоки не поддержаны jinja-темплейтером SQLFluff:
+# файл поддерживается вручную в стиле проекта (L29-комментарии)
+macros/materializations_override.sql
+# Диалектная конструкция table(generate_series(...)) t(i) не парсится SQLFluff —
+# рабочий код не ломаем ради линтера (L23)
+models/kimball/star/dim_date.sql
+models/vault/core/pit_customer.sql
+# wv_* — тонкие обёртки макроса anchor_view (95% файла — один вызов)
+models/anchor/core/wv_customer.sql
+models/anchor/core/wv_order.sql
+models/anchor/core/wv_order_line.sql
+
+# run_query-watermark (L33): jinja-встроенная функция недоступна темплейтеру
+models/vault/core/s_inventory_daily.sql

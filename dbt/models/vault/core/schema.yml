@@ -1,0 +1,251 @@
+version: 2
+
+# ============================================================================
+# Контракт raw vault / business vault (L5.2–L5.3, план §4 «silver»):
+#   • hubs: unique hash-ключей, not_null load_date/record_source;
+#   • links: unique link-ключей, relationships к хабам-участникам;
+#   • satellites: unique (hk, effective_from, hash_diff, load_ts), один record source на таблицу;
+#   • PIT: unique (hk, as_of_date) — полнота сетки дат проверяется живым
+#     прогоном (M3-критерий).
+# ============================================================================
+
+models:
+  - name: h_customer
+    description: 'Hub клиентов (ERP): customer_hk = durable SK.'
+    columns:
+      - name: customer_hk
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: load_date
+        data_tests: [not_null]
+      - name: record_source
+        data_tests:
+          - accepted_values:
+              values: ['erp']
+
+  - name: h_product
+    description: Hub товаров (ERP).
+    columns:
+      - name: product_hk
+        data_tests: [unique, not_null]
+      - name: load_date
+        data_tests: [not_null]
+      - name: record_source
+        data_tests: [not_null]
+
+  - name: h_store
+    description: Hub магазинов (ERP).
+    columns:
+      - name: store_hk
+        data_tests: [unique, not_null]
+      - name: load_date
+        data_tests: [not_null]
+      - name: record_source
+        data_tests: [not_null]
+
+  - name: h_order
+    description: Hub заказов (ERP).
+    columns:
+      - name: order_hk
+        data_tests: [unique, not_null]
+      - name: load_date
+        data_tests: [not_null]
+      - name: record_source
+        data_tests: [not_null]
+
+  - name: h_promo
+    description: Hub промо (CRM) — второй источник в том же vault (№10).
+    columns:
+      - name: promo_hk
+        data_tests: [unique, not_null]
+      - name: load_date
+        data_tests: [not_null]
+      - name: record_source
+        data_tests:
+          - accepted_values:
+              values: ['crm']
+
+  - name: l_order_customer
+    description: Связь заказ-клиент.
+    columns:
+      - name: order_customer_hk
+        data_tests: [unique, not_null]
+      - name: order_hk
+        data_tests:
+          - relationships:
+              to: ref('h_order')
+              field: order_hk
+      - name: customer_hk
+        data_tests:
+          - relationships:
+              to: ref('h_customer')
+              field: customer_hk
+
+  - name: l_order_store
+    description: Связь заказ-магазин.
+    columns:
+      - name: order_store_hk
+        data_tests: [unique, not_null]
+      - name: order_hk
+        data_tests:
+          - relationships:
+              to: ref('h_order')
+              field: order_hk
+      - name: store_hk
+        data_tests:
+          - relationships:
+              to: ref('h_store')
+              field: store_hk
+
+  - name: l_order_line
+    description: >
+      Учебная адаптация позиции заказа: payload хранится на связи и версионируется
+      по order_line_hk, line_hash, line_updated_at. Потребитель выбирает последнюю
+      версию по line_updated_at, затем load_date; это не неизменяемая транзакция.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_line_hk, line_hash, line_updated_at]  # L32b: версии измерений
+    columns:
+      - name: order_line_hk
+        data_tests: [not_null]
+      - name: order_hk
+        data_tests:
+          - relationships:
+              to: ref('h_order')
+              field: order_hk
+      - name: product_hk
+        data_tests:
+          - relationships:
+              to: ref('h_product')
+              field: product_hk
+
+  - name: l_payment_order
+    description: Связь платеж-заказ; paid_ts фиксирует первый контекст пары, без истории его исправлений.
+    columns:
+      - name: payment_order_hk
+        data_tests: [unique, not_null]
+      - name: order_hk
+        data_tests:
+          - relationships:
+              to: ref('h_order')
+              field: order_hk
+
+  - name: l_return_order_line
+    description: Связь возврат-строка заказа (паттерн №8).
+    columns:
+      - name: return_order_line_hk
+        data_tests: [unique, not_null]
+      - name: order_line_hk
+        data_tests:
+          - relationships:
+              to: ref('l_order_line')
+              field: order_line_hk
+
+  - name: l_order_promo
+    description: >
+      Кросс-источниковый link заказ-промо (№10): record_source='crm',
+      участники из разных систем; конформность order_no → order_hk в модели.
+    columns:
+      - name: order_promo_hk
+        data_tests: [unique, not_null]
+      - name: order_hk
+        data_tests:
+          - relationships:
+              to: ref('h_order')
+              field: order_hk
+      - name: promo_hk
+        data_tests:
+          - relationships:
+              to: ref('h_promo')
+              field: promo_hk
+
+  - name: s_customer_erp
+    description: >
+      Спутник клиентов: insert-only история атрибутов; дедуп по hash_diff
+      (SQL-side, H3); load_date = transaction time, effective_from = valid time.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_hk, effective_from, hash_diff, load_ts]  # L32: same-day коррекции — версии
+    columns:
+      - name: customer_hk
+        data_tests:
+          - relationships:
+              to: ref('h_customer')
+              field: customer_hk
+      - name: record_source
+        data_tests:
+          - accepted_values:
+              values: ['erp']
+
+  - name: s_product_erp
+    description: 'Спутник товаров: переносы категории (№5) — версии отпечатка.'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [product_hk, effective_from, hash_diff, load_ts]  # L32: same-day коррекции — версии
+    columns:
+      - name: record_source
+        data_tests:
+          - accepted_values:
+              values: ['erp']
+
+  - name: s_order_lifecycle
+    description: 'Спутник статусов заказа: события жизненного цикла (№2).'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_hk, effective_from, hash_diff, load_ts]  # L32: same-day коррекции — версии
+    columns:
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
+
+  - name: s_order_amounts
+    description: 'Спутник сумм заказа: версии total_amount (№3).'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_hk, effective_from, hash_diff, load_ts]  # L32: same-day коррекции — версии
+
+  - name: s_inventory_daily
+    description: >
+      «Спутник»-поток daily-снапшотов: change-capture избыточен (версия каждый
+      день); идемпотентность перезаливом дневных партиций.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [snap_date, store_hk, product_hk]
+
+  - name: s_promo_crm
+    description: Спутник промо CRM — свой record source (правило изоляции).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [promo_hk, effective_from, hash_diff, load_ts]  # L32: same-day коррекции — версии
+    columns:
+      - name: record_source
+        data_tests:
+          - accepted_values:
+              values: ['crm']
+
+  - name: s_customer_current
+    description: 'BV: текущее состояние клиента (последняя версия спутника).'
+    columns:
+      - name: customer_hk
+        data_tests: [unique, not_null]
+
+  - name: b_order_effective_state
+    description: 'BV: эффективное состояние заказа (последний статус + последняя сумма).'
+    columns:
+      - name: order_hk
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
+
+  - name: pit_customer
+    description: >
+      PIT «клиент на дату»: hk × as_of_date → точный указатель на версию
+      (effective_from, hash_diff, load_ts). Окно 180 дней до последнего заказа.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_hk, as_of_date]
+

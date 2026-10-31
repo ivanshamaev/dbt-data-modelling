@@ -1,0 +1,6 @@
+method	segment	ltv_amt	orders_cnt
+pit	premium	7000	2
+pit	standard	70000	2
+method	segment	ltv_amt	orders_cnt
+intervals	premium	7000	2
+intervals	standard	70000	2

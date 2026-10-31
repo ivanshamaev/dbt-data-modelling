@@ -1,0 +1,94 @@
+version: 2
+
+# ============================================================================
+# Контракт medallion silver (M8.2): канонические сущности с историей версий
+# (заказы/клиенты/строки) и текущие состояния остальных. У версионных —
+# инвариант единственной is_current-версии; у срезов — уникальность BK.
+# ============================================================================
+
+models:
+  - name: slv_erp__orders
+    description: >
+      Silver-сущность «заказ»: версионированный трек статусов/сумм из med_bronze;
+      постоянные поля (канал, клиент, order_ts) в каждой версии.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from]
+    columns:
+      - name: order_id
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - accepted_values:
+              values: ['shop', 'web', 'app']
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
+
+  - name: slv_erp__customers
+    description: >-
+      Silver-сущность «клиент»: версии сегмент/город/регион (valid-time) из med_bronze.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_id, valid_from]
+    columns:
+      - name: segment
+        data_tests:
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+
+  - name: slv_erp__order_lines
+    description: >-
+      Silver-сущность «строка заказа»: версии сумм (ретро-правки №3).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_line_id, valid_from]
+
+  - name: slv_erp__products
+    description: Текущее состояние товаров (канонизация brz_erp__products).
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  - name: slv_erp__categories
+    description: Справочник категорий (статичен).
+    columns:
+      - name: category_id
+        data_tests: [unique, not_null]
+
+  - name: slv_erp__stores
+    description: Текущее состояние магазинов.
+    columns:
+      - name: store_id
+        data_tests: [unique, not_null]
+
+  - name: slv_erp__payments
+    description: Текущие платежи (сплиты — отдельные строки).
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+
+  - name: slv_erp__returns
+    description: Возвраты (insert-only события).
+    columns:
+      - name: return_id
+        data_tests: [unique, not_null]
+
+  - name: slv_erp__inventory
+    description: Дневные снимки остатков.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [snap_date, store_id, product_id]
+
+  - name: slv_crm__promotions
+    description: Текущие промо-акции CRM.
+    columns:
+      - name: promo_id
+        data_tests: [unique, not_null]
+
+  - name: slv_crm__promo_participation
+    description: Промо-участия (insert-only, лаг sync_ts; орфаны ~1 % по построению).
+    columns:
+      - name: participation_id
+        data_tests: [unique, not_null]

@@ -1,0 +1,27 @@
+# Локальный стенд: dbt бежит в контейнере `dbt`, StarRocks доступен по имени сервиса.
+# Канонический прогон: make build (= dbt build: модели + тесты в DAG-порядке; snapshots отключены).
+retailco:
+  target: dev
+  outputs:
+    dev:
+      type: starrocks
+      host: starrocks
+      port: 9030
+      username: root
+      password: ""
+      catalog: default_catalog     # internal; внешние модели используют dotted schema
+      schema: analytics
+      threads: 1  # L24: параллельное создание Iceberg-таблиц в Lakekeeper даёт dirPath-мисматч
+      # is_async: true             # опционально: SUBMIT TASK для тяжёлых CTAS/INSERT
+    # Демо переносимости (L6.2): тот же проект, gold в Iceberg (scripts/gold_on_iceberg.sh).
+    # Исключения (PK-upsert H12, view H9) — в скрипте.
+    iceberg_gold:
+      type: starrocks
+      host: starrocks
+      port: 9030
+      username: root
+      password: ""
+      catalog: iceberg
+      schema: gold_iceberg
+      threads: 1  # L24: параллельное создание Iceberg-таблиц в Lakekeeper даёт dirPath-мисматч
+

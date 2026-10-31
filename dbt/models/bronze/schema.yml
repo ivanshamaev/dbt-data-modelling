@@ -1,0 +1,222 @@
+version: 2
+
+# ============================================================================
+# Тестовый контракт bronze (план §4, L3.2): целостность ДОСТАВКИ.
+# Bronze не проверяет бизнес-правила — только то, что сырьё доехало целым:
+#   • уникальность (PK + _batch_id): в рамках одного батча источник не дублит,
+#     между батчами строки могут повторяться — это история изменений (as designed);
+#   • not_null техколонок: _loaded_at/_source/_ingest_date/_batch_id;
+#   • accepted_values _source: 'erp' | 'crm';
+#   • суточный прирост в правдоподобных границах — singular-тесты в tests/.
+# ============================================================================
+
+models:
+  - name: raw_erp__customers
+    description: >
+      Сырьё клиентов ERP: append-only история версий (каждое изменение источника —
+      новая строка с новым _batch_id). Паттерны №1 (SCD), №4 (soft delete).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['erp']
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: customer_id
+        data_tests: [not_null]
+
+  - name: raw_erp__categories
+    description: Статический справочник категорий; полная перезагрузка (table).
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['erp']
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: category_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: raw_erp__products
+    description: Сырьё товаров; переносы между категориями видны как новые строки (паттерн №5).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [product_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+
+  - name: raw_erp__stores
+    description: Сырьё магазинов; открытие/закрытие (паттерн №6).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [store_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: store_id
+        data_tests: [not_null]
+
+  - name: raw_erp__orders
+    description: >
+      Сырьё заказов: переходы статусов (№2), ретро-правки сумм (№3), late-arriving (№7) —
+      каждое изменение = новая строка в партиции даты изменения.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: order_id
+        data_tests: [not_null]
+      - name: order_no
+        data_tests: [not_null]
+      - name: order_ts
+        data_tests: [not_null]
+
+  - name: raw_erp__order_lines
+    description: Сырьё строк заказов; правки discount/line_amount бампают updated_at (v2.2).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_line_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: order_line_id
+        data_tests: [not_null]
+
+  - name: raw_erp__payments
+    description: Сырьё платежей; сплиты (№9) и refund-переходы статуса.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [payment_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: payment_id
+        data_tests: [not_null]
+
+  - name: raw_erp__returns
+    description: Сырьё возвратов — insert-only события (№8).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [return_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: return_id
+        data_tests: [not_null]
+
+  - name: raw_erp__inventory
+    description: >
+      Сырьё daily-снапшотов остатков: insert-only, естественный PK (snap_date, store_id,
+      product_id) уникален без _batch_id — партиция дня заменяется целиком.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [snap_date, store_id, product_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests: [not_null]
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: snap_date
+        data_tests: [not_null]
+
+  - name: raw_crm__promotions
+    description: Сырьё промо-акций CRM; ретро-коррекции сроков (№3 из второго источника).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [promo_id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['crm']
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: promo_id
+        data_tests: [not_null]
+
+  - name: raw_crm__promo_participation
+    description: >
+      Сырьё промо-участий; watermark по sync_ts (лаг 1–3 дня, №10). Орфанные order_no —
+      данные, плохие по построению: ловим ограниченным тестом в staging (M2), не здесь.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [id, _batch_id]
+    columns:
+      - name: _ingest_date
+        data_tests: [not_null]
+      - name: _loaded_at
+        data_tests: [not_null]
+      - name: _source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['crm']
+      - name: _batch_id
+        data_tests: [not_null]
+      - name: id
+        data_tests: [not_null]

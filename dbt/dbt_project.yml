@@ -1,0 +1,47 @@
+# Слои, теги и контуры методологий (план guide/cource-improve, Stage 2):
+# каждый контур изолирован — staging → ядро → витрины внутри models/<contour>/.
+# Общий только bronze (методологически нейтральный инжест) и sources.yml.
+name: retailco
+version: "1.0.0"
+config-version: 2
+
+profile: retailco
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  retailco:
+    +materialized: view
+    # L28: view в external-каталогах не поддерживают ALTER (rename-путь view-
+    # materialization падает «ICEBERG_VIEW doesn't support [ALTER]») — CREATE OR REPLACE
+    +on_view_exists: replace
+    bronze:
+      # инжест — осознанное расширение канона (план §7): инжест-инструментов в стеке нет
+      +tags: ["bronze"]
+    inmon:
+      +tags: ["inmon"]
+    kimball:
+      +tags: ["kimball"]
+    vault:
+      +tags: ["vault"]
+    anchor:
+      +tags: ["anchor"]
+    medallion:
+      bronze:
+        +tags: ["medallion", "med_bronze"]
+      silver:
+        +tags: ["medallion", "med_silver"]
+      gold:
+        +tags: ["medallion", "med_gold"]
+
+snapshots:
+  retailco:
+    +tags: ["gold"]

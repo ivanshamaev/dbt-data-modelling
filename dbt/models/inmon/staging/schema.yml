@@ -1,0 +1,215 @@
+version: 2
+
+# ============================================================================
+# Тестовый контракт silver / staging (план §4, L4.3): схемная и ссылочная
+# целостность после чистки.
+#   • уникальность/не-NULL бизнес-ключей и hash-SK;
+#   • accepted_values справочников (каналы, статусы, методы, механики);
+#   • relationships внутри источника (FK ERP; promo_id внутри CRM);
+#   • КРОСС-источниковый order_no НЕ проверяется relationships: орфаны ~1%
+#     плохи по построению — их ловит ограниченный singular-тест с порогом
+#     (tests/staging_crm_orphans_share.sql), чтобы канонический dbt build
+#     оставался зелёным (правило §4: «заведомо плохие данные не красят build»).
+# ============================================================================
+
+models:
+  - name: stg_in_erp__customers
+    description: >
+      Актуальное состояние клиентов ERP (дедуп bronze-истории) + durable SK
+      (customer_key, customer_sk_v строки SCD2-версии). Удалённые остаются
+      с is_deleted — исключение из метрик делают витрины.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: customer_key
+        data_tests: [unique, not_null]
+      - name: customer_sk_v
+        data_tests: [unique, not_null]
+      - name: segment
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+      - name: city
+        data_tests: [not_null]
+      - name: registered_at
+        data_tests: [not_null]
+
+  - name: stg_in_erp__categories
+    description: Статический справочник категорий (3 уровня, самоссылка) + category_key.
+    columns:
+      - name: category_id
+        data_tests: [unique, not_null]
+      - name: category_key
+        data_tests: [unique, not_null]
+      - name: parent_category_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__categories')
+              field: category_id
+
+  - name: stg_in_erp__products
+    description: Актуальные товары; category_id меняется (паттерн №5) — историю держит dim/vault.
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+      - name: product_key
+        data_tests: [unique, not_null]
+      - name: category_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_in_erp__categories')
+              field: category_id
+      - name: list_price
+        data_tests: [not_null]
+
+  - name: stg_in_erp__stores
+    description: Магазины; закрытие — soft (closed_at, is_closed), паттерн №6.
+    columns:
+      - name: store_id
+        data_tests: [unique, not_null]
+      - name: store_key
+        data_tests: [unique, not_null]
+      - name: format
+        data_tests:
+          - accepted_values:
+              values: ['mall', 'street', 'online']
+
+  - name: stg_in_erp__orders
+    description: >
+      Актуальные заказы: последний статус/сумма; order_no — degenerate dimension
+      и ключ стыковки с CRM; order_key — durable SK.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: order_key
+        data_tests: [unique, not_null]
+      - name: order_no
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests:
+          - accepted_values:
+              values: ['shop', 'web', 'app']
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
+      - name: customer_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__customers')
+              field: customer_id
+      - name: store_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__stores')
+              field: store_id
+      - name: order_ts
+        data_tests: [not_null]
+
+  - name: stg_in_erp__order_lines
+    description: Актуальные строки заказов — гранулярность fct_sales; order_line_key для возвратов/link.
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+      - name: order_line_key
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__orders')
+              field: order_id
+      - name: product_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__products')
+              field: product_id
+      - name: qty
+        data_tests: [not_null]
+
+  - name: stg_in_erp__payments
+    description: Актуальные платежи (сплиты — отдельные строки, паттерн №9).
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__orders')
+              field: order_id
+      - name: method
+        data_tests:
+          - accepted_values:
+              values: ['card', 'cash', 'online', 'gift']
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['authorized', 'captured', 'refunded']
+
+  - name: stg_in_erp__returns
+    description: Возвраты строк — insert-only события (паттерн №8), полный поток.
+    columns:
+      - name: return_id
+        data_tests: [unique, not_null]
+      - name: order_line_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__order_lines')
+              field: order_line_id
+      - name: return_ts
+        data_tests: [not_null]
+
+  - name: stg_in_erp__inventory
+    description: >
+      Daily snapshot остатков (33M строк истории). Полуаддитивный факт-источник;
+      «дыры» ассортиментной матрицы сохраняются (KPI №9).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [snap_date, store_id, product_id]
+    columns:
+      - name: snap_date
+        data_tests: [not_null]
+      - name: store_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__stores')
+              field: store_id
+      - name: product_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_erp__products')
+              field: product_id
+
+  - name: stg_in_crm__promotions
+    description: Актуальные промо-акции CRM (ретро-коррекции №3) + promo_key.
+    columns:
+      - name: promo_id
+        data_tests: [unique, not_null]
+      - name: promo_key
+        data_tests: [unique, not_null]
+      - name: mechanics
+        data_tests:
+          - accepted_values:
+              values: ['percent', 'fixed', 'bundle']
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['planned', 'active', 'closed']
+
+  - name: stg_in_crm__promo_participation
+    description: >
+      Промо-участия (insert-only, лаг sync_ts). ВНИМАНИЕ: relationships на
+      order_no НЕ ставим — ~1% орфанов по построению; доля ограничена
+      singular-тестом staging_crm_orphans_share (порог 1,5%).
+    columns:
+      - name: participation_id
+        data_tests: [unique, not_null]
+      - name: promo_id
+        data_tests:
+          - relationships:
+              to: ref('stg_in_crm__promotions')
+              field: promo_id
+      - name: sync_ts
+        data_tests: [not_null]

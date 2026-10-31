@@ -1,0 +1,52 @@
+version: 2
+
+# ============================================================================
+# Тестовый контракт канонических витрин (docs/design/mart_catalog.md).
+# Один и тот же набор тестов — у витрины КАЖДОГО контура: зерно уникально,
+# меры не NULL, значения доменов фиксированы. Эквивалентность чисел между
+# контурами проверяет R4 (tests/reconcile.sql), здесь — внутренняя дисциплина.
+# ============================================================================
+
+models:
+  - name: gld_sales_daily
+    description: >-
+      Каноническая витрина medallion: продажи день × канал из medallion silver.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [sales_date, channel]
+    columns:
+      - name: sales_date
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['shop', 'web', 'app']
+      - name: orders_cnt
+        data_tests: [not_null]
+      - name: revenue_amt
+        data_tests: [not_null]
+
+  - name: gld_customer_ltv
+    description: >-
+      Каноническая витрина medallion: LTV по сегментам на момент заказа (valid-time join на gold-запросе).
+    columns:
+      - name: segment
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+      - name: ltv_amt
+        data_tests: [not_null]
+
+  - name: gld_promo_effect
+    description: >-
+      Каноническая витрина medallion: промо против organic (стыковка на gold-запросе).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_type]
+    columns:
+      - name: order_type
+        data_tests:
+          - accepted_values:
+              values: ['promo', 'organic']

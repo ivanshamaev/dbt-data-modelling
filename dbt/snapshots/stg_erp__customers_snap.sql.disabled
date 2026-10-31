@@ -1,0 +1,33 @@
+{% snapshot stg_erp__customers_snap %}
+
+{# ============================================================================
+ # L4.3 · СПОСОБ A: нативные dbt snapshots (config-based синтаксис, для полноты
+ # и сравнения с ручным паттерном dim_customer в тексте гл. 8).
+ #
+ # ⚠ H21 (⏳ M0-12): snapshots НЕ перечислены в supported features dbt-starrocks
+ # (README адаптера). MERGE-механика snapshots опирается на UPDATE — на
+ # PRIMARY KEY internal-таблицах может работать; живая проверка на M0.
+ # Если не поддержан: каноном остаётся ручной паттерн (dim_customer), а этот
+ # файл — демонстрация синтаксиса со счастливой оговоркой в тексте гл. 8.
+ # ========================================================================= #}
+
+{{ config(
+    target_schema='analytics',
+    unique_key='customer_id',
+    strategy='check',
+    check_cols=['segment', 'city', 'region', 'is_deleted'],
+    invalidate_hard_deletes=True,
+    tags=['gold', 'dim']
+) }}
+
+select
+    customer_id,
+    segment,
+    city,
+    region,
+    registered_at,
+    updated_at,
+    is_deleted
+from {{ ref('stg_erp__customers') }}
+
+{% endsnapshot %}

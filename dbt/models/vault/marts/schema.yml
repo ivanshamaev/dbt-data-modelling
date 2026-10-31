@@ -1,0 +1,65 @@
+version: 2
+
+# ============================================================================
+# Тестовый контракт information marts (M6.5): канонические витрины каталога
+# (docs/design/mart_catalog.md) + расширенная im_promo (механика × тип).
+# Эквивалентность контуров проверяет R4 (tests/reconcile.sql).
+# ============================================================================
+
+models:
+  - name: im_sales_daily
+    description: >-
+      Каноническая витрина vault: продажи день × канал из Raw Vault + Business Vault.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [sales_date, channel]
+    columns:
+      - name: sales_date
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['shop', 'web', 'app']
+      - name: orders_cnt
+        data_tests: [not_null]
+      - name: revenue_amt
+        data_tests: [not_null]
+
+  - name: im_customer_ltv
+    description: >-
+      Каноническая витрина vault: LTV по сегментам на момент заказа (as-of к s_customer_erp).
+    columns:
+      - name: segment
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+      - name: ltv_amt
+        data_tests: [not_null]
+
+  - name: im_promo_effect
+    description: >-
+      Каноническая витрина vault: промо против organic (свертка im_promo до зерна каталога).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_type]
+    columns:
+      - name: order_type
+        data_tests:
+          - accepted_values:
+              values: ['promo', 'organic']
+      - name: revenue_amt
+        data_tests: [not_null]
+
+  - name: im_promo
+    description: >-
+      Расширенная витрина промо (механика × тип заказа): выручка, заказы, AOV из l_order_promo.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [mechanics, order_type]
+    columns:
+      - name: order_type
+        data_tests:
+          - accepted_values:
+              values: ['promo', 'organic']

@@ -1,0 +1,12 @@
+{{ config(
+    materialized='table',
+    schema='iceberg.anchor_core',
+    tags=['anchor'],
+) }}
+
+-- L5.4 · a_customer: anchor — существование сущности (только ключ + insert_time).
+select
+    customer_id,
+    min(_loaded_at) as insert_time
+from {{ ref('raw_erp__customers') }}
+group by 1;

@@ -1,0 +1,32 @@
+version: 2
+
+# История версий для temporal baseline измерений Kimball (M5.3): тот же
+# инвариант, что у int_* inmon-ядра — у сущности РОВНО ОДНА is_current-версия.
+
+models:
+  - name: kim_customer_history
+    description: >
+      История атрибутов клиента (сегмент/город/регион), развёрнутая из bronze
+      напрямую в контуре Kimball — temporal baseline для dim_customer (SCD2).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_id, valid_from]
+    columns:
+      - name: customer_id
+        data_tests: [not_null]
+      - name: segment
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+
+  - name: kim_product_category_history
+    description: >
+      История принадлежности товара категории из bronze — версии для dim_product
+      (SCD2 по категории, паттерн №5). Первая версия валидна «с рождения» товара.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [product_id, valid_from]
+    columns:
+      - name: product_id
+        data_tests: [not_null]

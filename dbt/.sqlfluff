@@ -1,0 +1,69 @@
+# ============================================================================
+# SQLFluff — единый формат SQL/dbt-проекта (план: docs/format-recommendation.md)
+#
+# Запуск: make lint / make fmt (из корня репо; внутри контейнера dbt cwd=/app).
+# Диалект starrocks наследует mysql — соответствует движку стенда (план §3).
+# ВАЖНО: встроенные dbt lint/format требуют dbt v2 и не знают StarRocks —
+# поэтому standalone SQLFluff (у него есть отдельный диалект starrocks).
+# Имена правил — канонические для SQLFluff 3.x (CV03/LT02/…), legacy L-имена
+# даны комментариями для сопоставления с документацией.
+# ============================================================================
+[sqlfluff]
+dialect = starrocks
+templater = jinja
+# План §4: рекомендация 120 (статистика проекта: 208 строк >120 против 690 >80)
+max_line_length = 120
+# structure.column_order меняет ПОРЯДОК колонок; RF02/RF04 требуют квалификации
+# всех ссылок и запрещают keyword-имена колонок (status/channel) — это логика,
+# не формат (план §4 их не включает)
+exclude_rules = structure.column_order, references.qualification, references.keywords, references.quoting, structure.subquery
+
+[sqlfluff:indentation]
+indent_unit = space
+tab_space_size = 4
+
+# Выравнивание `as` — РУЧНАЯ конвенция проекта (план §4 «сохраняем»).
+# Живой прогон показал: авто-align SQLFluff работает по rendered-позициям
+# STUB-макросов и переносит фиксированный padding в исходник — на строках
+# {{ hash_key(...) }} выравнивание дрейфует. Поэтому spacing_before = any:
+# линтер НЕ проверяет и НЕ «чинит» отступы перед as (docs §4)
+[sqlfluff:layout:type:alias_expression]
+spacing_before = any
+
+# Trailing comma в select — ЗАПРЕЩЁН: StarRocks (MySQL-семейство) не парсит
+# «expr, FROM» — live-тест: ERROR 1064 Unexpected input 'from'. Пункт плана §4
+# скорректирован по движку (docs/format-recommendation.md §4)
+[sqlfluff:rules:convention.select_trailing_comma]
+select_clause_trailing_comma = forbid
+
+# Точка с запятой не ставится (план §4; legacy L052); fix убирает существующие
+[sqlfluff:rules:convention.terminator]
+require_final_semicolon = False
+
+# JOIN: с новой строки, явный inner join (план §4; legacy L051)
+[sqlfluff:rules:ambiguous.join]
+fully_qualify_join_types = inner
+
+# Табличные алиасы — неявные (без AS): «from erp.orders o» — стиль проекта
+[sqlfluff:rules:aliasing.table]
+aliasing = implicit
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = True
+
+# Заглушки проектных макросов (план §8: jinja-темплейтеру нужны определения).
+# Инлайн-механика [macros]: library_path рассчитан на python-модули (sqlfluff 3.3).
+# Контекстные переменные моделей (напр. wm в s_inventory_daily) получают default
+# в самих моделях через |default(...) — опция context в 3.3.1 падает (баг).
+[sqlfluff:templater:jinja:macros]
+hash_key = {% macro hash_key(cols) %}stub_hk{% endmacro %}
+hash_diff = {% macro hash_diff(cols) %}stub_hd{% endmacro %}
+bronze_tech = {% macro bronze_tech(source_name, event_ts_expr) %}stub_bt{% endmacro %}
+bronze_lookback = {% macro bronze_lookback(event_col, days=3) %}where 1 = 1{% endmacro %}
+bronze_new_versions = {% macro bronze_new_versions(columns) %}where 1 = 1{% endmacro %}
+anchor_view = {% macro anchor_view(entity, pk, attributes) %}stub_av{% endmacro %}
+anchor_current_attr = {% macro anchor_current_attr(a, b, c) %}stub_ac{% endmacro %}
+
+# Длинные комментарии (русские пояснения) не считаются нарушением длины
+[sqlfluff:rules:layout.long_lines]
+ignore_comment_lines = True

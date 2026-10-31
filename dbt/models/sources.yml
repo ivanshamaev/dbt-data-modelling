@@ -1,0 +1,40 @@
+version: 2
+
+sources:
+  # Единая точка входа источников (план §4, P0-2).
+  # Чтение через JDBC-каталог StarRocks: schema = "<catalog>.<database>" (dbt-starrocks README).
+  - name: erp_pg
+    description: >
+      ERP RetailCo (PostgreSQL, схема erp) через JDBC-каталог erp_pg.
+      Только чтение; watermark-инкрементальность по updated_at / дате события.
+    schema: "erp_pg.{{ var('source_erp_schema', 'erp') }}"
+    tables:
+      - name: customers
+        description: Клиенты; segment — SCD2-кандидат №1 (паттерн №1)
+      - name: categories
+        description: Иерархия 3 уровней (самоссылка)
+      - name: products
+        description: Товары; category_id меняется (паттерн №5)
+      - name: stores
+        description: Магазины; открытие/закрытие (паттерн №6)
+      - name: orders
+        description: Заказы; статусы, таймстемпы этапов, правки total_amount (№2, №3)
+      - name: order_lines
+        description: Строки заказов (гранулярность факта продаж)
+      - name: payments
+        description: Платежи; сплиты ~7%, refund'ы (паттерн №9)
+      - name: returns
+        description: Возвраты строк; частичные (паттерн №8)
+      - name: inventory
+        description: Ежедневные снапшоты остатков; матрица ассортимента ~85%
+
+  - name: crm_pg
+    description: >
+      CRM промо-направления — «честный второй источник»: свои ключи (PR-2024-017),
+      лаг синхронизации 1–3 дня, ~1% орфанных order_no (паттерн №10).
+    schema: "erp_pg.{{ var('source_crm_schema', 'crm') }}"
+    tables:
+      - name: promotions
+        description: Промо-акции; ретро-коррекции сроков (№3 из другого источника)
+      - name: promo_participation
+        description: Участия заказов в акциях; order_no без FK

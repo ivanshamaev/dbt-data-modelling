@@ -1,0 +1,178 @@
+version: 2
+
+# ============================================================================
+# Контракт учебного anchor-ядра: отдельные сущности, атрибуты и связи.
+#   • anchors: уникальный ключ существования;
+#   • attributes: unique (pk, valid_from, insert_time) — наблюдение бизнес-версии;
+#   • knots: уникальные значения (справочник);
+#   • ties: уникальные комбинации участников;
+#   • широкие view (wv_*) — окно в «классическую форму» (макрос anchor_view).
+# ============================================================================
+
+models:
+  - name: kn_segment
+    description: Knot сегментов клиента.
+    columns:
+      - name: value
+        data_tests: [unique, not_null]
+
+  - name: kn_order_status
+    description: Knot статусов заказа.
+    columns:
+      - name: value
+        data_tests: [unique, not_null]
+
+  - name: kn_channel
+    description: Knot каналов продаж.
+    columns:
+      - name: value
+        data_tests: [unique, not_null]
+
+  - name: kn_mechanics
+    description: Knot механик промо (CRM).
+    columns:
+      - name: value
+        data_tests: [unique, not_null]
+
+  - name: a_customer
+    description: Anchor существования клиента.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+
+  - name: a_order
+    description: Anchor заказа (ERP).
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+
+  - name: a_order_line
+    description: Anchor строки заказа.
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+
+  - name: a_product
+    description: Anchor товара.
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  - name: a_promo
+    description: Anchor промо (второй источник).
+    columns:
+      - name: promo_id
+        data_tests: [unique, not_null]
+
+  - name: t_customer_order
+    description: Tie заказ-клиент.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, customer_id]
+
+  - name: t_order_order_line
+    description: Tie заказ-строка.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, order_line_id]
+
+  - name: t_order_line_product
+    description: Tie строка-товар.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_line_id, product_id]
+
+  - name: t_order_promo
+    description: 'Кросс-источниковый tie заказ-промо (№10): insert_time = sync_ts.'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, promo_id]
+
+  - name: ac_customer_segment
+    description: 'Историзированный сегмент (knot): valid_time история для KPI №7.'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_id, valid_from, insert_time]
+    columns:
+      - name: value
+        data_tests: [not_null]
+
+  - name: ac_customer_city
+    description: Историзированный город.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [customer_id, valid_from, insert_time]
+
+  - name: ac_order_status
+    description: 'Историзированный статус (knot, №2).'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: ac_order_amount
+    description: 'Bitemporal суммы заказа (№3): valid_from + insert/superseded.'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: ac_order_channel
+    description: Канал заказа (knot).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: ac_order_order_ts
+    description: Наблюдения времени создания заказа; общий временной формат атрибутов.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: ac_order_line_amount
+    description: Сумма строки (ретро-правки — новые строки).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_line_id, valid_from, insert_time]
+
+  - name: ac_promo_mechanics
+    description: Механика промо (knot, CRM).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [promo_id, valid_from, insert_time]
+
+  - name: ac_order_paid_at
+    description: Веха оплаты (KPI №4).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: ac_order_shipped_at
+    description: Веха отправки (KPI №4).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: ac_order_delivered_at
+    description: Веха доставки (KPI №4).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_id, valid_from, insert_time]
+
+  - name: wv_customer
+    description: Широкий view клиента (макрос anchor_view, H14).
+    columns:
+      - name: segment
+        data_tests:
+          - accepted_values:
+              values: ['standard', 'premium', 'vip']
+
+  - name: wv_order
+    description: Широкий view заказа (атрибуты + tie клиента).
+    columns:
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
+
+  - name: wv_order_line
+    description: Широкий view строки заказа (сумма + ties).
+

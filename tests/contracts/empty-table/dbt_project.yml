@@ -1,0 +1,6 @@
+name: course_contract_probe
+version: '1.0.0'
+config-version: 2
+profile: retailco
+model-paths: [models]
+macro-paths: [/app/macros]

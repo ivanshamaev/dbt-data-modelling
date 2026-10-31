@@ -1,0 +1,125 @@
+# RetailCo stand: PG (erp/crm + lakekeeper meta) + MinIO + Lakekeeper + StarRocks + dbt-runner
+# Политика версий: теги фиксируются на M0 (см. plan/modules/verification-log.md, M0-8);
+# до фиксации используются latest/4.1-latest с пометкой.
+
+services:
+  postgres:
+    image: postgres:${PG_TAG}
+    container_name: retailco-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: UTC                # все таймстемпы генератора в UTC (§2.6)
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./scripts/pg_init.sql:/docker-entrypoint-initdb.d/10_pg_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rustfs:
+    # RustFS — S3-совместимая замена MinIO (образы MinIO удалены из реестров, 2026).
+    # Креды MINIO_* поддерживаются через RUSTFS_ROOT_USER/... (MinIO-env совместимость).
+    image: rustfs/rustfs:${RUSTFS_TAG}
+    container_name: retailco-rustfs
+    environment:
+      RUSTFS_ROOT_USER: ${RUSTFS_ROOT_USER}
+      RUSTFS_ROOT_PASSWORD: ${RUSTFS_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+
+  # Одноразовая инициализация Lakekeeper-метабазы (миграции схемы)
+  lakekeeper-migrate:
+    image: quay.io/lakekeeper/catalog:${LAKEKEEPER_TAG}
+    container_name: retailco-lakekeeper-migrate
+    command: ["migrate"]
+    environment: &lakekeeper_env
+      # Конфигурация по docs.lakekeeper.io (0.14.x): PG_* вместо старых METASTORE_*
+      LAKEKEEPER__PG_HOST_W: postgres
+      LAKEKEEPER__PG_PORT: 5432
+      LAKEKEEPER__PG_USER: ${LAKEKEEPER_DB_USER}
+      LAKEKEEPER__PG_PASSWORD: ${LAKEKEEPER_DB_PASSWORD}
+      LAKEKEEPER__PG_DATABASE: ${LAKEKEEPER_DB}
+      LAKEKEEPER__PG_ENCRYPTION_KEY: retailco-dev-only-key
+      # стенд без auth (OSS): OPENID-переменные не задаём; default project включён
+      LAKEKEEPER__ENABLE_DEFAULT_PROJECT: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog:${LAKEKEEPER_TAG}
+    container_name: retailco-lakekeeper
+    command: ["serve"]
+    environment: *lakekeeper_env
+    ports:
+      - "8181:8181"
+    depends_on:
+      lakekeeper-migrate:
+        condition: service_completed_successfully
+
+  starrocks:
+    image: starrocks/allin1-ubuntu:${STARROCKS_TAG}
+    container_name: retailco-starrocks
+    ports:
+      - "${SR_MYSQL_PORT}:9030"
+      - "${SR_HTTP_PORT}:8030"
+    volumes:
+      - sr_data:/opt/starrocks
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8030/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  dbt:
+    build:
+      context: .
+      dockerfile: docker/dbt.Dockerfile
+    image: data-modeling-guide-dbt   # фиксируем тег: образ может быть предзагружен (tar-пайп)
+    container_name: retailco-dbt
+    working_dir: /app
+    volumes:
+      - ./dbt:/app
+      - ./scripts:/scripts:ro
+      - ./tests:/tests:ro
+    depends_on:
+      starrocks:
+        condition: service_healthy
+    entrypoint: ["sleep", "infinity"]
+
+  # Одноразовый сервис создания бакета (profile=init, не стартует с `up`)
+  rustfs-init:
+    image: amazon/aws-cli:latest
+    profiles: ["init"]
+    depends_on:
+      - rustfs
+    environment:
+      AWS_ACCESS_KEY_ID: ${RUSTFS_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${RUSTFS_ROOT_PASSWORD}
+      AWS_REGION: local
+    entrypoint: >
+      /bin/sh -c "
+      for i in $$(seq 1 30); do
+        aws s3api head-bucket --bucket ${RUSTFS_BUCKET} --endpoint-url http://rustfs:9000 2>/dev/null && exit 0;
+        sleep 2;
+      done;
+      aws s3api create-bucket --bucket ${RUSTFS_BUCKET} --endpoint-url http://rustfs:9000
+      "
+
+volumes:
+  pg_data:
+  rustfs_data:
+  rustfs_logs:
+  sr_data:
