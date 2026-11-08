@@ -3,7 +3,14 @@
 dbt-модели RetailCo (пять контуров методологий) и всё необходимое для их
 прогона: локальный docker-стенд и настройки Kubernetes-кластера для деплоя.
 
-Скопировано из `data-modeling-guide` (без docs/guide/plan — только рабочая часть).
+Открытый исполняемый проект для курса RetailCo. Здесь ведутся модели dbt, макросы,
+тесты, запросы и стенд. Текст курса и исторические свидетельства ведутся отдельно.
+
+Версия проекта **3.0.0**. Anchor использует `anc_` для якорей, `attr_` для атрибутов,
+`tie_` для связей и `knot_` для кнотов. Собранные последние состояния обозначаются
+`latest_anc_`, агрегаты Anchor — `agg_anc_`, факты Kimball — `fact_`.
+[Соответствие старых и новых имён и переход](docs/anchor-naming.md),
+[история изменений](CHANGELOG.md).
 
 ## Структура
 
@@ -11,7 +18,7 @@ dbt-модели RetailCo (пять контуров методологий) и 
 dbt/                 dbt-проект retailco: bronze + 5 контуров
   models/bronze/     общий инжест источников (нейтральный)
   models/inmon/      Inmon: staging → 3NF (int_*) → dm_*
-  models/kimball/    Kimball: staging → звезда (dim/fct/agg/obt) → km_*
+  models/kimball/    Kimball: staging → звезда (dim/fact/agg/obt) → km_*
   models/vault/      Data Vault: staging → HUB/LINK/SAT → PIT → im_*
   models/anchor/     Anchor: staging → ядро → views/marts
   models/medallion/  Medallion: bronze → silver → gold
@@ -33,14 +40,14 @@ kubernetes/          kubeconfig тестового кластера + как п�
 ## Запуск локально
 
 ```bash
-cp .env .env            # при необходимости поправить порты/креды
 make up                 # поднять стенд (pg, rustfs, lakekeeper, starrocks, dbt)
-make deps               # dbt deps (dbt_utils)
+make catalogs           # бакет + warehouse + каталоги StarRocks
 make sources            # DDL источников + функции генератора (пересоздаёт схемы!)
 make seed               # исходные данные (3 года истории)
-make live days=5        # прожить несколько дней симуляции (опционально)
-make catalogs           # бакет + warehouse + каталоги StarRocks
+make deps               # dbt deps (dbt_utils)
 make build              # канонический прогон: модели + тесты
+make simulate-day       # следующее состояние источника после первого захвата
+make build              # захватить состояние и пересчитать модели
 make kpi                # 13 KPI-запросов
 make reconcile          # сверка ядер методологий
 ```

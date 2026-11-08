@@ -4,7 +4,7 @@
 ) }}
 
 {# L4.3 · строки заказов: актуальные версии (ретро-правки discount/line_amount, #}
-{# v2.2-спека). Гранулярность будущего fct_sales; order_line_key — идентичность #}
+{# v2.2-спека). Гранулярность будущего fact_sales; order_line_key — идентичность #}
 {# строки для возвратов и transactional link. #}
 with ranked as (
     select

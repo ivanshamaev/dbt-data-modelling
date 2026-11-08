@@ -7,7 +7,7 @@
 {# M8.2 · gld_sales_daily: каноническая витрина каталога из medallion-контура. #}
 {# Medallion-механика: gold читает ТОЛЬКО silver (контракт слоя) — актуальные #}
 {# версии сущностей из истории silver. Gold применяет контракт продаж; те же цифры, что у #}
-{# dm_/km_/im_/am_ (R4): один смысл — пять конвейеров. #}
+{# dm_/km_/im_/agg_anc_ (R4): один смысл — пять конвейеров. #}
 select
     cast(o.order_ts as date)   as sales_date,
     o.channel,

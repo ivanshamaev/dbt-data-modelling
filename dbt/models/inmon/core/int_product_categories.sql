@@ -66,7 +66,7 @@ select
     product_id,
     category_id,
     {# Temporal baseline (§2.1): первая версия категории валидна «с рождения»
-       товара — иначе valid-time join в fct_sales терял 37% строк (урок R2:
+       товара — иначе valid-time join в fact_sales терял 37% строк (урок R2:
        pre-baseline заказы). #}
     case when is_first then date '1970-01-01' else cast(updated_at as date) end as valid_from,
     valid_to,

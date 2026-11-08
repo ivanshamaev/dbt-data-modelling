@@ -1,0 +1,29 @@
+docker compose -p dbt-data-modelling -f docker-compose.yml -f /tmp/retailco-anchor-compose.yml exec -T dbt dbt parse --no-partial-parse
+[0m10:54:37  Running with dbt=1.12.5
+[0m10:54:37  Registered adapter: starrocks=1.12.2
+[0m10:54:41  [[33mWARNING[0m][MissingArgumentsPropertyInGenericTestDeprecation]: Deprecated
+functionality
+Found top-level arguments to test `accepted_values` defined on 'gld_sales_daily'
+in package 'retailco' (models/medallion/gold/schema.yml). Arguments to generic
+tests should be nested under the `arguments` property.
+[0m10:54:44  [[33mWARNING[0m]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
+There are 1 unused configuration paths:
+- snapshots.retailco
+[0m10:54:44  Performance info: /app/target/perf_info.json
+[0m10:54:44  [[33mWARNING[0m][DeprecationsSummary]: Deprecated functionality
+Summary of encountered deprecations:
+- MissingArgumentsPropertyInGenericTestDeprecation: 224 occurrences
+To see all deprecation instances instead of just the first occurrence of each,
+run command again with the `--show-all-deprecations` flag. You may also need to
+run with `--no-partial-parse` as some deprecations are only encountered during
+parsing.
+docker compose -p dbt-data-modelling -f docker-compose.yml -f /tmp/retailco-anchor-compose.yml exec -T dbt python /scripts/check_contours.py target/manifest.json
+Контур anchor: 41 моделей
+Контур bronze: 11 моделей
+Контур inmon: 24 моделей
+Контур kimball: 32 моделей
+Контур medallion: 25 моделей
+Контур vault: 35 моделей
+OK: граф полный, модели контуров независимы
+docker compose -p dbt-data-modelling -f docker-compose.yml -f /tmp/retailco-anchor-compose.yml exec -T dbt sqlfluff lint models macros
+All Finished!

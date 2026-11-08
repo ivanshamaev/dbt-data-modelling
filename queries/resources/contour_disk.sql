@@ -8,7 +8,7 @@
 -- ============================================================================
 
 -- 3a) Звезда Kimball (internal): по таблицам (вывод скрипта)
---   for t in dim_* fct_* agg_* obt_* km_*; do
+--   for t in dim_* fact_* agg_* obt_* km_*; do
 --     mysql -e "SHOW DATA FROM analytics.$t"
 --   done
 

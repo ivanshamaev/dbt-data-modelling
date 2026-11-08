@@ -31,7 +31,7 @@ where l.is_current
 union all
 
 select 'R1_kpi1_total_revenue', 'star', sum(line_amount)
-from fct_sales
+from fact_sales
 
 union all
 
@@ -41,7 +41,7 @@ from iceberg.vault_marts.im_sales_daily
 union all
 
 select 'R1_kpi1_total_revenue', 'anchor', sum(revenue_amt)
-from iceberg.anchor_marts.am_sales_daily
+from iceberg.anchor_marts.agg_anc_sales_daily
 
 -- ---------------------------------------------------------------------------
 -- R2 · KPI №7 (LTV по сегментам на момент заказа): 3NF ↔ звезда
@@ -50,7 +50,7 @@ from iceberg.anchor_marts.am_sales_daily
 
 with star_ltv as (
     select c.segment, sum(f.line_amount) as ltv_amt
-    from fct_sales f
+    from fact_sales f
     inner join dim_customer c on c.customer_sk_v = f.customer_sk_v
     group by 1
 ),
@@ -102,24 +102,24 @@ vault_ltv as (
     group by 1
 ),
 anchor_ltv as (
-    select seg.segment, sum(wv_l.line_amount) as ltv_amt
-    from iceberg.anchor_core.wv_order_line wv_l
-    inner join iceberg.anchor_core.wv_order wv_o
-        on wv_o.order_id = wv_l.order_id
-    inner join iceberg.anchor_core.t_customer_order tco
-        on tco.order_id = wv_o.order_id
+    select seg.segment, sum(ol.line_amount) as ltv_amt
+    from iceberg.anchor_core.latest_anc_order_line ol
+    inner join iceberg.anchor_core.latest_anc_order o
+        on o.order_id = ol.order_id
+    inner join iceberg.anchor_core.tie_customer_order tco
+        on tco.order_id = o.order_id
     inner join (
         select c.customer_id, k.value as segment, c.valid_from,
                lead(c.valid_from) over (partition by c.customer_id
                                         order by c.valid_from) as valid_to
-        from iceberg.anchor_core.ac_customer_segment c
-        inner join iceberg.anchor_core.kn_segment k on k.knot_id = c.value
+        from iceberg.anchor_core.attr_customer_segment c
+        inner join iceberg.anchor_core.knot_segment k on k.knot_id = c.value
         where c.superseded_time is null
     ) seg
         on seg.customer_id = tco.customer_id
-       and seg.valid_from <= cast(wv_o.order_ts as date)
-       and (seg.valid_to is null or seg.valid_to > cast(wv_o.order_ts as date))
-    where wv_o.status in ('paid', 'shipped', 'delivered', 'returned')
+       and seg.valid_from <= cast(o.order_ts as date)
+       and (seg.valid_to is null or seg.valid_to > cast(o.order_ts as date))
+    where o.status in ('paid', 'shipped', 'delivered', 'returned')
     group by 1
 )
 select
@@ -153,7 +153,7 @@ order by status desc, segment;
 
 -- ---------------------------------------------------------------------------
 -- R3 · KPI №13 (промо-эффективность): звезда (obt) ↔ vault (im_promo) ↔
--- anchor (t_order_promo × ac_promo_mechanics) — кросс-источниковая сходимость
+-- anchor (tie_order_promo × attr_promo_mechanics) — кросс-источниковая сходимость
 -- в трёх ядрах (приёмный тест мультиисточниковости).
 -- ---------------------------------------------------------------------------
 with star_kpi13 as (
@@ -171,14 +171,14 @@ vault_kpi13 as (
 anchor_kpi13 as (
     select
         case when tp.order_id is not null then 'promo' else 'organic' end as order_type,
-        sum(wv_l.line_amount) as revenue_amt
-    from iceberg.anchor_core.wv_order_line wv_l
-    inner join iceberg.anchor_core.wv_order wv_o
-        on wv_o.order_id = wv_l.order_id
+        sum(ol.line_amount) as revenue_amt
+    from iceberg.anchor_core.latest_anc_order_line ol
+    inner join iceberg.anchor_core.latest_anc_order o
+        on o.order_id = ol.order_id
     left join (
-        select distinct order_id from iceberg.anchor_core.t_order_promo
-    ) tp on tp.order_id = wv_o.order_id
-    where wv_o.status in ('paid', 'shipped', 'delivered', 'returned')
+        select distinct order_id from iceberg.anchor_core.tie_order_promo
+    ) tp on tp.order_id = o.order_id
+    where o.status in ('paid', 'shipped', 'delivered', 'returned')
     group by 1
 )
 select
@@ -218,7 +218,7 @@ with sales_daily as (
     union all
     select 'vault', sales_date, channel, orders_cnt, revenue_amt from iceberg.vault_marts.im_sales_daily
     union all
-    select 'anchor', sales_date, channel, orders_cnt, revenue_amt from iceberg.anchor_marts.am_sales_daily
+    select 'anchor', sales_date, channel, orders_cnt, revenue_amt from iceberg.anchor_marts.agg_anc_sales_daily
     union all
     select 'medallion', sales_date, channel, orders_cnt, revenue_amt from iceberg.med_gold.gld_sales_daily
 ),
@@ -230,7 +230,7 @@ ltv as (
     union all
     select 'vault', segment, customers_cnt, orders_cnt, ltv_amt from iceberg.vault_marts.im_customer_ltv
     union all
-    select 'anchor', segment, customers_cnt, orders_cnt, ltv_amt from iceberg.anchor_marts.am_customer_ltv
+    select 'anchor', segment, customers_cnt, orders_cnt, ltv_amt from iceberg.anchor_marts.agg_anc_customer_ltv
     union all
     select 'medallion', segment, customers_cnt, orders_cnt, ltv_amt from iceberg.med_gold.gld_customer_ltv
 ),
@@ -242,7 +242,7 @@ promo as (
     union all
     select 'vault', order_type, orders_cnt, revenue_amt from iceberg.vault_marts.im_promo_effect
     union all
-    select 'anchor', order_type, orders_cnt, revenue_amt from iceberg.anchor_marts.am_promo_effect
+    select 'anchor', order_type, orders_cnt, revenue_amt from iceberg.anchor_marts.agg_anc_promo_effect
     union all
     select 'medallion', order_type, orders_cnt, revenue_amt from iceberg.med_gold.gld_promo_effect
 )

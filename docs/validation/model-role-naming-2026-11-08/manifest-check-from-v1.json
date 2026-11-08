@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "models": 168,
+  "tests": 724,
+  "anchor_models": 41,
+  "renamed_models": 36,
+  "anchor_core_families": {
+    "latest": 3,
+    "tie": 4,
+    "attr": 11,
+    "anc": 5,
+    "knot": 4
+  },
+  "anchor_aggregates": 3,
+  "kimball_facts": 6,
+  "baseline_compared": true,
+  "normalized_model_sql_and_dependencies_equal": true,
+  "normalized_test_contracts_equal": true,
+  "dbt_core": "1.12.5",
+  "database_execution": false
+}

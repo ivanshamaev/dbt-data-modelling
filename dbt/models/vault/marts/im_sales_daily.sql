@@ -8,7 +8,7 @@
 {# Vault-механика: последняя версия транзакционного линка (L32b) join к #}
 {# Business Vault (b_order_effective_state) — «эффективный» статус без окон #}
 {# по спутникам. Зерно каталога: день × канал (channel — контекст события #}
-{# на link, рядом с order_ts). Сверка R4 против dm_/km_/am_/gld_. #}
+{# на link, рядом с order_ts). Сверка R4 против dm_/km_/agg_anc_/gld_. #}
 select
     cast(ol.order_ts as date)   as sales_date,
     ol.channel,

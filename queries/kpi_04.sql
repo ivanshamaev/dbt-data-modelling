@@ -9,7 +9,7 @@ with funnel as (
         count(shipped_at)                                      as shipped_cnt,
         count(delivered_at)                                    as delivered_cnt,
         count(cancelled_at)                                    as cancelled_cnt
-    from fct_order_lifecycle
+    from fact_order_lifecycle
 )
 select
     created_cnt,
@@ -20,5 +20,5 @@ select
     avg(lag_create_to_paid_sec) / 60.0              as avg_min_create_to_paid,
     avg(lag_paid_to_shipped_sec) / 60.0             as avg_min_paid_to_shipped,
     avg(lag_shipped_to_delivered_sec) / 60.0        as avg_min_shipped_to_delivered
-from fct_order_lifecycle, funnel
+from fact_order_lifecycle, funnel
 group by created_cnt, paid_cnt, shipped_cnt, delivered_cnt, cancelled_cnt;

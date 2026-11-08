@@ -9,7 +9,7 @@ select
     f.channel,
     count(distinct f.order_id) as orders_cnt,
     sum(f.line_amount)         as revenue_amt
-from fct_sales f
+from fact_sales f
 join dim_store s on s.store_key = f.store_key
 group by 1, 2, 3, 4
 order by 1 desc, 2;

@@ -12,7 +12,7 @@ with candidate as (
     select
         order_id,
         max(valid_from) as business_day
-    from ac_order_amount
+    from attr_order_amount
     group by order_id
     having count(distinct value) > 1
     order by order_id
@@ -25,7 +25,7 @@ moments as (
         c.business_day,
         a.insert_time as known_at
     from candidate c
-    inner join ac_order_amount a on a.order_id = c.order_id
+    inner join attr_order_amount a on a.order_id = c.order_id
 ),
 
 perspectives as (
@@ -42,7 +42,7 @@ perspectives as (
             order by a.valid_from desc, a.insert_time desc
         ) as rn
     from moments m
-    inner join ac_order_amount a
+    inner join attr_order_amount a
         on a.order_id = m.order_id
         and a.valid_from <= m.business_day
         and a.insert_time <= m.known_at

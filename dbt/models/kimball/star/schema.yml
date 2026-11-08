@@ -99,7 +99,7 @@ models:
   - name: vw_dim_delivered_date
     description: 'Role-playing: дата доставки.'
 
-  - name: fct_sales
+  - name: fact_sales
     description: >
       Transaction fact на гранулярности строки заказа. Семантика выручки:
       is_current, статусы paid/shipped/delivered/returned (синхронизирована
@@ -132,7 +132,7 @@ models:
       - name: order_date
         data_tests: [not_null]
 
-  - name: fct_payments
+  - name: fact_payments
     description: 'Факт платежей (паттерн №9): гранулярность платежа, сплиты = строки.'
     columns:
       - name: payment_id
@@ -148,7 +148,7 @@ models:
           - accepted_values:
               values: ['authorized', 'captured', 'refunded']
 
-  - name: fct_returns
+  - name: fact_returns
     description: 'Факт возвратов строк (паттерн №8): частичные возвраты, своя гранулярность.'
     columns:
       - name: return_id
@@ -156,7 +156,7 @@ models:
       - name: order_line_key
         data_tests:
           - not_null
-          # relationships → fct_sales заменён пороговым singular-тестом
+          # relationships → fact_sales заменён пороговым singular-тестом
           # star_returns_in_sales (cancelled-после-оплаты не входят в выручку)
       - name: order_no
         data_tests: [not_null]
@@ -168,7 +168,7 @@ models:
       - name: return_qty
         data_tests: [not_null]
 
-  - name: fct_inventory_daily
+  - name: fact_inventory_daily
     description: >
       Periodic snapshot остатков: полуаддитивный факт (суммировать только
       внутри дня). «Дыры» матрицы ассортимента — фича (KPI №9).
@@ -181,7 +181,7 @@ models:
       - name: qty_on_hand
         data_tests: [not_null]
 
-  - name: fct_order_lifecycle
+  - name: fact_order_lifecycle
     description: >
       Accumulating snapshot (паттерн №2): одна строка на заказ, вехи и лаги
       между этапами; KPI №4 — прямой SELECT.
@@ -193,12 +193,12 @@ models:
           - accepted_values:
               values: ['created', 'paid', 'shipped', 'delivered', 'cancelled', 'returned']
 
-  - name: fct_assortment_coverage
+  - name: fact_assortment_coverage
     description: Factless факт «ассортиментное покрытие» (SKU × магазин × день) — view над inventory.
 
   - name: obt_sales
     description: >
-      One Big Table — паттерн подачи: fct_sales + денормализованные измерения
+      One Big Table — паттерн подачи: fact_sales + денормализованные измерения
       + промо-атрибуты CRM (KPI №13). Упрощение «один промо на заказ» оговорено.
     columns:
       - name: order_line_key

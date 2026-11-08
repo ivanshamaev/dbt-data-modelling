@@ -10,7 +10,7 @@ version: 2
 models:
   - name: km_sales_daily
     description: >-
-      Каноническая витрина kimball: продажи день × канал из звезды (fct_sales).
+      Каноническая витрина kimball: продажи день × канал из звезды (fact_sales).
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [sales_date, channel]

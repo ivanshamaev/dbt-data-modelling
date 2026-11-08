@@ -13,7 +13,7 @@ with activity as (
         -- точная месячная разница = (y*12+m) − (y*12+m)
         (year(f.order_date) * 12 + month(f.order_date))
           - (year(c.registered_at) * 12 + month(c.registered_at)) as month_no
-    from fct_sales f
+    from fact_sales f
     join dim_customer c on c.customer_sk_v = f.customer_sk_v
 )
 select

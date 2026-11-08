@@ -7,7 +7,7 @@ select
     store_id,
     product_id,
     count(*) as oos_days
-from fct_inventory_daily
+from fact_inventory_daily
 where is_out_of_stock
 group by 1, 2
 order by oos_days desc, 1, 2

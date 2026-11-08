@@ -10,13 +10,13 @@ USE anchor_core;
 
 select
     seg.segment,
-    count(distinct wv_o.order_id) as orders_cnt,
-    sum(wv_l.line_amount)         as ltv_amt
-from wv_order_line wv_l
-inner join wv_order wv_o
-    on wv_o.order_id = wv_l.order_id
-inner join t_customer_order tco
-    on tco.order_id = wv_o.order_id
+    count(distinct o.order_id) as orders_cnt,
+    sum(ol.line_amount)         as ltv_amt
+from latest_anc_order_line ol
+inner join latest_anc_order o
+    on o.order_id = ol.order_id
+inner join tie_customer_order tco
+    on tco.order_id = o.order_id
 inner join (
     -- historized-атрибут с восстановленным valid-интервалом (knot → значение)
     select
@@ -25,13 +25,13 @@ inner join (
         c.valid_from,
         lead(c.valid_from) over (partition by c.customer_id
                                  order by c.valid_from) as valid_to
-    from ac_customer_segment c
-    inner join kn_segment k on k.knot_id = c.value  -- L37: value(BIGINT knot-ссылка), не несуществующий knot_id
+    from attr_customer_segment c
+    inner join knot_segment k on k.knot_id = c.value  -- L37: value(BIGINT knot-ссылка), не несуществующий knot_id
     where c.superseded_time is null
 ) seg
     on seg.customer_id = tco.customer_id
-   and seg.valid_from <= cast(wv_o.order_ts as date)
-   and (seg.valid_to is null or seg.valid_to > cast(wv_o.order_ts as date))
-where wv_o.status in ('paid', 'shipped', 'delivered', 'returned')
+   and seg.valid_from <= cast(o.order_ts as date)
+   and (seg.valid_to is null or seg.valid_to > cast(o.order_ts as date))
+where o.status in ('paid', 'shipped', 'delivered', 'returned')
 group by 1
 order by ltv_amt desc;

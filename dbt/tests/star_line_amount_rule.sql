@@ -4,5 +4,5 @@ select
     order_line_key,
     qty, unit_price, discount_pct, line_amount,
     round(qty * unit_price * (100 - discount_pct) / 100.0) as expected_amt
-from {{ ref('fct_sales') }}
+from {{ ref('fact_sales') }}
 where line_amount <> round(qty * unit_price * (100 - discount_pct) / 100.0)

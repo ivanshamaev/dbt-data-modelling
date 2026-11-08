@@ -1,0 +1,18 @@
+[0m10:52:57  Running with dbt=1.12.5
+[0m10:52:58  Registered adapter: starrocks=1.12.2
+[0m10:53:02  [[33mWARNING[0m][MissingArgumentsPropertyInGenericTestDeprecation]: Deprecated
+functionality
+Found top-level arguments to test `accepted_values` defined on 'gld_sales_daily'
+in package 'retailco' (models/medallion/gold/schema.yml). Arguments to generic
+tests should be nested under the `arguments` property.
+[0m10:53:05  [[33mWARNING[0m]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
+There are 1 unused configuration paths:
+- snapshots.retailco
+[0m10:53:05  Performance info: /app/target/perf_info.json
+[0m10:53:05  [[33mWARNING[0m][DeprecationsSummary]: Deprecated functionality
+Summary of encountered deprecations:
+- MissingArgumentsPropertyInGenericTestDeprecation: 224 occurrences
+To see all deprecation instances instead of just the first occurrence of each,
+run command again with the `--show-all-deprecations` flag. You may also need to
+run with `--no-partial-parse` as some deprecations are only encountered during
+parsing.

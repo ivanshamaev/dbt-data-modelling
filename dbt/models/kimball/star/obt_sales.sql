@@ -9,7 +9,7 @@
 ) }}
 
 -- L4.4 · obt_sales: One Big Table — паттерн ПОДАЧИ (гл. 7), не отдельная модель
--- данных: fct_sales + денормализованные атрибуты измерений для фиксированных
+-- данных: fact_sales + денормализованные атрибуты измерений для фиксированных
 -- дашбордов и «одного прохода скана». Когда звезда избыточна, а когда вредна —
 -- текст гл. 7–8; сравнение планов запроса — артефакт гл. 14.
 --
@@ -57,10 +57,10 @@ select
     pr.mechanics      as promo_mechanics,
     pr.discount_value as promo_discount_value,
     f.order_updated_at
-from {{ ref('fct_sales') }} f
+from {{ ref('fact_sales') }} f
 {% if target.name == 'iceberg_gold' %}
 {#- L38: переносимое подмножество без internal-PK димов — атрибуты напрямую
-    из staging (текущий сегмент/категория; версионная механика — см. fct_sales) -#}
+    из staging (текущий сегмент/категория; версионная механика — см. fact_sales) -#}
 join {{ ref('stg_kim_erp__customers') }} dc on dc.customer_id = f.customer_id
 join {{ ref('stg_kim_erp__products') }} dp on dp.product_id = f.product_id
 left join {{ ref('stg_kim_erp__categories') }} cat on cat.category_id = dp.category_id

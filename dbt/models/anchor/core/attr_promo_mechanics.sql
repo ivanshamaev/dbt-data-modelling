@@ -1,0 +1,51 @@
+{{ config(
+    materialized='table',
+    schema='iceberg.anchor_core',
+    tags=['anchor'],
+) }}
+
+-- Наблюдения атрибута сохраняются с первым временем доставки из bronze.
+-- valid_from — бизнес-день; superseded_time закрывает только прежнее
+-- утверждение о ТОМ ЖЕ бизнес-дне, а не всю историю сущности.
+with stream as (
+    select
+        promo_id,
+        k.knot_id                as value,
+        cast(updated_at as date) as valid_from,
+        _loaded_at
+    from {{ ref('raw_crm__promotions') }} inner join {{ ref("knot_mechanics") }} k on k.value = mechanics
+),
+
+dedup as (
+    select
+        promo_id,
+        value,
+        valid_from,
+        _loaded_at,
+        row_number() over (
+            partition by promo_id, valid_from, _loaded_at
+            order by _loaded_at
+        ) as rn
+    from stream
+),
+
+normalized as (
+    select
+        promo_id,
+        value,
+        valid_from,
+        _loaded_at
+    from dedup
+    where rn = 1
+)
+
+select
+    promo_id,
+    value,
+    valid_from,
+    _loaded_at as insert_time,
+    lead(_loaded_at) over (
+        partition by promo_id, valid_from
+        order by _loaded_at
+    ) as superseded_time
+from normalized

@@ -11,7 +11,7 @@ select
         else 'old'
     end as product_age,
     sum(f.line_amount) as revenue_amt,
-    sum(f.line_amount) / (select sum(line_amount) from fct_sales) as revenue_share
-from fct_sales f
+    sum(f.line_amount) / (select sum(line_amount) from fact_sales) as revenue_share
+from fact_sales f
 join dim_product p on p.product_sk_v = f.product_sk_v
 group by 1;

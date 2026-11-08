@@ -8,6 +8,6 @@ FROM iceberg.med_bronze.brz_erp__customers
 UNION ALL
 SELECT 'anchor',a.customer_id,k.value,cast(a.valid_from AS varchar),cast(a.insert_time AS varchar),
        coalesce(cast(a.superseded_time AS varchar),'')
-FROM iceberg.anchor_core.ac_customer_segment a
-INNER JOIN iceberg.anchor_core.kn_segment k ON k.knot_id=a.value
+FROM iceberg.anchor_core.attr_customer_segment a
+INNER JOIN iceberg.anchor_core.knot_segment k ON k.knot_id=a.value
 ORDER BY 1,2,3,4,5,6;

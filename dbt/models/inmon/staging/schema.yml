@@ -110,7 +110,7 @@ models:
         data_tests: [not_null]
 
   - name: stg_in_erp__order_lines
-    description: Актуальные строки заказов — гранулярность fct_sales; order_line_key для возвратов/link.
+    description: Актуальные строки заказов — гранулярность fact_sales; order_line_key для возвратов/link.
     columns:
       - name: order_line_id
         data_tests: [unique, not_null]

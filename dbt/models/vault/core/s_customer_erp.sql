@@ -91,7 +91,7 @@ new_rows as (
     where prev_diff is null or hash_diff <> prev_diff
 ),
 {# L31+L34: temporal baseline (§2.1) — первая версия валидна «с рождения», как в
-   int_customer_attributes/ac_customer_segment; иначе as-of join в KPI №7 теряет
+   int_customer_attributes/attr_customer_segment; иначе as-of join в KPI №7 теряет
    pre-baseline заказы. Floor ОБЯЗАН жить в CTE ДО анти-джойна: алиас SELECT-списка
    невидим в WHERE, и анти-джойн сравнивал raw-дату с сохранённым floor → never match
    → каждый прогон аппендил полный набор (4×50K дублей на живом прогоне). #}

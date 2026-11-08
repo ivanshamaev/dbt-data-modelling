@@ -12,7 +12,7 @@ with totals as (
         o.total_amount,
         coalesce(sum(p.payment_amt), 0) as payments_sum
     from {{ ref('stg_kim_erp__orders') }} o
-    left join {{ ref('fct_payments') }} p on o.order_no = p.order_no
+    left join {{ ref('fact_payments') }} p on o.order_no = p.order_no
     where o.paid_at is not null
     group by 1, 2
 )

@@ -40,18 +40,18 @@ INNER JOIN iceberg.PREFIXvault_core.s_customer_erp s
  AND s.effective_from=p.s_customer_erp_eff_from AND s.load_ts=p.s_customer_erp_load_ts
 UNION ALL
 SELECT 'anchor_original_still_known', count(*), 1
-FROM iceberg.PREFIXanchor_core.ac_customer_segment a
-INNER JOIN iceberg.PREFIXanchor_core.kn_segment k ON k.knot_id=a.value
+FROM iceberg.PREFIXanchor_core.attr_customer_segment a
+INNER JOIN iceberg.PREFIXanchor_core.knot_segment k ON k.knot_id=a.value
 WHERE customer_id=1 AND k.value='standard' AND valid_from='1970-01-01' AND superseded_time IS NULL
 UNION ALL
 SELECT 'anchor_vip_previous_belief', count(*), 1
-FROM iceberg.PREFIXanchor_core.ac_customer_segment a
-INNER JOIN iceberg.PREFIXanchor_core.kn_segment k ON k.knot_id=a.value
+FROM iceberg.PREFIXanchor_core.attr_customer_segment a
+INNER JOIN iceberg.PREFIXanchor_core.knot_segment k ON k.knot_id=a.value
 WHERE customer_id=1 AND k.value='vip' AND valid_from='2026-10-31' AND superseded_time>insert_time
 UNION ALL
 SELECT 'anchor_premium_current_belief', count(*), 1
-FROM iceberg.PREFIXanchor_core.ac_customer_segment a
-INNER JOIN iceberg.PREFIXanchor_core.kn_segment k ON k.knot_id=a.value
+FROM iceberg.PREFIXanchor_core.attr_customer_segment a
+INNER JOIN iceberg.PREFIXanchor_core.knot_segment k ON k.knot_id=a.value
 WHERE customer_id=1 AND k.value='premium' AND valid_from='2026-10-31' AND superseded_time IS NULL
 UNION ALL
 SELECT 'partial_returns_qty', sum(qty), 2 FROM iceberg.PREFIXbronze.raw_erp__returns WHERE order_line_id=201

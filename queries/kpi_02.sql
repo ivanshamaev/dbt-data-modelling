@@ -10,7 +10,7 @@ select
     p.category_l2,
     p.category_l3,
     sum(f.line_amount) as revenue_amt
-from fct_sales f
+from fact_sales f
 join dim_product p on p.product_sk_v = f.product_sk_v
 where f.order_date >= date '2026-01-01'
   and f.order_date <  date '2026-04-01'

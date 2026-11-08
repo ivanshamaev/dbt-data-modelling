@@ -7,6 +7,6 @@ select
     count(distinct order_id)          as orders_cnt,
     sum(line_amount)                  as revenue_amt,
     sum(line_amount) / count(distinct order_id) as aov_amt
-from fct_sales
+from fact_sales
 group by 1
 order by aov_amt desc;

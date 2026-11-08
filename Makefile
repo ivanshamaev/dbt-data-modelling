@@ -82,7 +82,7 @@ med_gold: ## medallion gold: канонические витрины катал�
 inmon: ## контур Inmon: bronze→stg_in→3NF(int_*)→dm_* (+тесты) — гл. 6
 	$(DBT) build --select '+path:models/inmon'
 
-kimball: ## контур Kimball: bronze→stg_kim→звезда(dim/fct/agg/obt)→km_* (+тесты) — гл. 8
+kimball: ## контур Kimball: bronze→stg_kim→звезда(dim/fact/agg/obt)→km_* (+тесты) — гл. 8
 	$(DBT) build --select '+path:models/kimball'
 
 vault: ## контур Data Vault: bronze→stg_dv→raw vault→BV/PIT→im_* (+тесты) — гл. 10
@@ -125,7 +125,7 @@ kpi: ## 13 KPI-запросов к звезде Kimball
 reconcile: ## сверка ядер (M2: 3NF ↔ звезда; M3 добавит vault/anchor)
 	set -o pipefail; $(MYSQL) --batch --raw < tests/reconcile.sql | $(COMPOSE) exec -T dbt python /scripts/check_reconciliation.py
 
-rebuild: ## пересборка модели с потомками: make rebuild m=fct_sales (гл. 13)
+rebuild: ## пересборка модели с потомками: make rebuild m=fact_sales (гл. 13)
 	@if [ -z "$$m" ]; then echo "usage: make rebuild m=<model>"; exit 1; fi
 	$(DBT) build --select "$$m+"
 

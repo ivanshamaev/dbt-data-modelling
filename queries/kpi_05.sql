@@ -9,7 +9,7 @@ with sales as (
         p.category_l1,
         p.category_l3,
         sum(f.line_amount) as category_sales_amt
-    from fct_sales f
+    from fact_sales f
     inner join dim_product p on p.product_sk_v = f.product_sk_v
     group by 1, 2
 ), returned as (
@@ -20,9 +20,9 @@ with sales as (
         count(*) as returns_cnt,
         sum(r.return_qty) as units_returned,
         sum(r.refund_amt) as refund_amt
-    from fct_returns r
+    from fact_returns r
     inner join dim_product p on p.product_sk_v = r.product_sk_v
-    inner join fct_sales f on f.order_line_key = r.order_line_key
+    inner join fact_sales f on f.order_line_key = r.order_line_key
     group by 1, 2, 3
 )
 select

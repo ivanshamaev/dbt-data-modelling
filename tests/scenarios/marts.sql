@@ -17,11 +17,11 @@ SELECT 'vault','customer_ltv',segment,'',customers_cnt,orders_cnt,ltv_amt FROM i
 UNION ALL
 SELECT 'vault','promo_effect',order_type,'',0,orders_cnt,revenue_amt FROM iceberg.PREFIXvault_marts.im_promo_effect
 UNION ALL
-SELECT 'anchor' AS contour,'sales_daily' AS mart,cast(sales_date AS varchar) AS dim1,channel AS dim2,0 AS customers,orders_cnt AS orders,revenue_amt AS amount FROM iceberg.PREFIXanchor_marts.am_sales_daily
+SELECT 'anchor' AS contour,'sales_daily' AS mart,cast(sales_date AS varchar) AS dim1,channel AS dim2,0 AS customers,orders_cnt AS orders,revenue_amt AS amount FROM iceberg.PREFIXanchor_marts.agg_anc_sales_daily
 UNION ALL
-SELECT 'anchor','customer_ltv',segment,'',customers_cnt,orders_cnt,ltv_amt FROM iceberg.PREFIXanchor_marts.am_customer_ltv
+SELECT 'anchor','customer_ltv',segment,'',customers_cnt,orders_cnt,ltv_amt FROM iceberg.PREFIXanchor_marts.agg_anc_customer_ltv
 UNION ALL
-SELECT 'anchor','promo_effect',order_type,'',0,orders_cnt,revenue_amt FROM iceberg.PREFIXanchor_marts.am_promo_effect
+SELECT 'anchor','promo_effect',order_type,'',0,orders_cnt,revenue_amt FROM iceberg.PREFIXanchor_marts.agg_anc_promo_effect
 UNION ALL
 SELECT 'medallion' AS contour,'sales_daily' AS mart,cast(sales_date AS varchar) AS dim1,channel AS dim2,0 AS customers,orders_cnt AS orders,revenue_amt AS amount FROM iceberg.PREFIXmed_gold.gld_sales_daily
 UNION ALL

@@ -9,10 +9,10 @@ macros/materializations_override.sql
 # рабочий код не ломаем ради линтера (L23)
 models/kimball/star/dim_date.sql
 models/vault/core/pit_customer.sql
-# wv_* — тонкие обёртки макроса anchor_view (95% файла — один вызов)
-models/anchor/core/wv_customer.sql
-models/anchor/core/wv_order.sql
-models/anchor/core/wv_order_line.sql
+# latest_anc_* — тонкие обёртки макроса anchor_view (95% файла — один вызов)
+models/anchor/core/latest_anc_customer.sql
+models/anchor/core/latest_anc_order.sql
+models/anchor/core/latest_anc_order_line.sql
 
 # run_query-watermark (L33): jinja-встроенная функция недоступна темплейтеру
 models/vault/core/s_inventory_daily.sql

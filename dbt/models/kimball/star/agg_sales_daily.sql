@@ -21,7 +21,7 @@ select
     sum(f.qty)                 as items_qty,
     sum(f.line_amount)         as revenue_amt,
     max(f.order_updated_at)    as order_updated_at
-from {{ ref('fct_sales') }} f
+from {{ ref('fact_sales') }} f
 inner join {{ ref('dim_store') }} s on f.store_key = s.store_key
 
 group by 1, 2, 3, 4, 5

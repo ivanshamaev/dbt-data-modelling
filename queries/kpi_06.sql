@@ -7,6 +7,6 @@ select
     payment_status,
     count(*)      as payments_cnt,
     sum(payment_amt) as amount_amt
-from fct_payments
+from fact_payments
 group by 1, 2
 order by 1, 2;

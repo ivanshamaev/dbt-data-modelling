@@ -8,7 +8,7 @@
 {# order_no ↔ CRM (паттерн №10) на входе зависимой витрины Inmon. #}
 {# L32 (fan-out, пойман R4 живым прогоном 2026-10-31): заказ в нескольких #}
 {# промо (~2.25 в среднем) умножал выручку — участия дедуплируются до флага #}
-{# «заказ промо» (та же механика, что t_order_promo в anchor). CRM-орфаны не создают ERP-продаж. #}
+{# «заказ промо» (та же механика, что tie_order_promo в anchor). CRM-орфаны не создают ERP-продаж. #}
 select
     case when p.order_no is not null then 'promo' else 'organic' end as order_type,
     count(distinct l.order_id)                                      as orders_cnt,
