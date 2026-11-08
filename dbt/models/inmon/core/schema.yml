@@ -172,4 +172,7 @@ models:
       - name: status
         data_tests:
           - accepted_values:
-              values: ['authorized', 'captured', 'refunded']
+              values: ['authorized', 'captured', 'partially_refunded', 'refunded']
+      - name: refunded_amount
+        description: Накопленная сумма возврата денег в рублях.
+        data_tests: [not_null]

@@ -1,0 +1,9 @@
+{
+  "dbt_version": "1.12.5",
+  "project_version": "4.0.0",
+  "manifest_sha256": "e26fa5500f35b3abf9f6542cb972429fe98a8bd235a8f59f2c152724306cdf27",
+  "models": 168,
+  "tests": 730,
+  "disabled": 0,
+  "new_build_executed": false
+}

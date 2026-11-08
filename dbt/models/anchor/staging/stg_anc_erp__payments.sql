@@ -13,6 +13,7 @@ with ranked as (
         method,
         amount,
         status,
+        refunded_amount,
         refunded_at,
         updated_at,
         _batch_id,
@@ -33,6 +34,7 @@ select
     method,
     amount,
     status,
+    refunded_amount,
     refunded_at,
     updated_at
 from ranked

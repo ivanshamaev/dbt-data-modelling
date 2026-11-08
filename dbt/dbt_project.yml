@@ -2,7 +2,7 @@
 # каждый контур изолирован — staging → ядро → витрины внутри models/<contour>/.
 # Общий только bronze (методологически нейтральный инжест) и sources.yml.
 name: retailco
-version: "3.0.0"
+version: "4.0.0"
 config-version: 2
 
 profile: retailco

@@ -1,0 +1,496 @@
+ Container retailco-generator-check-postgres-1  Starting
+ Container retailco-generator-check-postgres-1  Started
+ Container retailco-generator-check-postgres-1  Waiting
+ Container retailco-generator-check-postgres-1  Healthy
+NOTICE:  schema "crm" does not exist, skipping
+DROP SCHEMA
+NOTICE:  schema "erp" does not exist, skipping
+DROP SCHEMA
+NOTICE:  schema "meta" does not exist, skipping
+DROP SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+GRANT
+GRANT
+ALTER DEFAULT PRIVILEGES
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+NOTICE:  function meta.seed_history(date) does not exist, skipping
+DROP FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+SET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 4
+INSERT 0 5
+INSERT 0 3
+ reprice_orders 
+----------------
+ 
+(1 row)
+
+DO
+UPDATE 1
+ sync_payments 
+---------------
+ 
+(1 row)
+
+DO
+UPDATE 1
+INSERT 0 1
+ mark_full_returns 
+-------------------
+ 
+(1 row)
+
+ sync_payments 
+---------------
+ 
+(1 row)
+
+DO
+INSERT 0 1
+ mark_full_returns 
+-------------------
+ 
+(1 row)
+
+ sync_payments 
+---------------
+ 
+(1 row)
+
+DO
+UPDATE 1
+ sync_payments 
+---------------
+ 
+(1 row)
+
+INSERT 0 1
+ reprice_orders 
+----------------
+ 
+(1 row)
+
+ sync_payments 
+---------------
+ 
+(1 row)
+
+DO
+INSERT 0 1
+ snapshot_inventory 
+--------------------
+                  1
+(1 row)
+
+ snapshot_inventory 
+--------------------
+                  1
+(1 row)
+
+ snapshot_inventory 
+--------------------
+                  1
+(1 row)
+
+NOTICE:  PASS: скидки, междневная оплата, частичный/полный возврат, округление, split, ретро-скидка, движения остатков
+DO
+NOTICE:  drop cascades to 3 other objects
+DETAIL:  drop cascades to table crm.promotions
+drop cascades to constraint order_promotions_promo_id_fkey on table meta.order_promotions
+drop cascades to table crm.promo_participation
+DROP SCHEMA
+NOTICE:  drop cascades to 13 other objects
+DETAIL:  drop cascades to table erp.stores
+drop cascades to constraint inventory_movements_store_id_fkey on table meta.inventory_movements
+drop cascades to table erp.categories
+drop cascades to table erp.products
+drop cascades to constraint inventory_movements_product_id_fkey on table meta.inventory_movements
+drop cascades to table erp.customers
+drop cascades to table erp.orders
+drop cascades to constraint order_promotions_order_id_fkey on table meta.order_promotions
+drop cascades to constraint order_adjustments_order_id_fkey on table meta.order_adjustments
+drop cascades to table erp.order_lines
+drop cascades to table erp.payments
+drop cascades to table erp.returns
+drop cascades to table erp.inventory
+DROP SCHEMA
+NOTICE:  drop cascades to 25 other objects
+DETAIL:  drop cascades to table meta.simulated_days
+drop cascades to table meta.config
+drop cascades to table meta.assortment
+drop cascades to table meta.assortment_cnt
+drop cascades to table meta.order_promotions
+drop cascades to table meta.order_adjustments
+drop cascades to table meta.inventory_movements
+drop cascades to table meta.inventory_balance
+drop cascades to sequence meta.seq_order
+drop cascades to sequence meta.seq_order_no
+drop cascades to sequence meta.seq_line
+drop cascades to sequence meta.seq_payment
+drop cascades to sequence meta.seq_return
+drop cascades to sequence meta.seq_participation
+drop cascades to function meta.day_seed(date)
+drop cascades to function meta.renumber_assortment(integer)
+drop cascades to function meta.reprice_orders(bigint,bigint,timestamp with time zone)
+drop cascades to function meta.create_orders(date,integer,timestamp with time zone,timestamp with time zone)
+drop cascades to function meta.sync_payments()
+drop cascades to function meta.mark_full_returns()
+drop cascades to function meta.publish_promotions(timestamp with time zone)
+drop cascades to function meta.snapshot_inventory(date)
+drop cascades to function meta.seed_history(date,integer,integer,integer,integer)
+drop cascades to function meta.simulate_day(date)
+drop cascades to function meta.reset_sources()
+DROP SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+GRANT
+GRANT
+ALTER DEFAULT PRIVILEGES
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+DROP FUNCTION
+NOTICE:  function meta.seed_history(date) does not exist, skipping
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+NOTICE:  [seed] stores… 2026-11-08 16:49:16.723077+00
+NOTICE:  [seed] categories… 2026-11-08 16:49:16.723815+00
+NOTICE:  [seed] products… 2026-11-08 16:49:16.737291+00
+NOTICE:  [seed] customers… 2026-11-08 16:49:16.74349+00
+NOTICE:  [seed] assortment… 2026-11-08 16:49:16.745572+00
+NOTICE:  [seed] promotions… 2026-11-08 16:49:16.757823+00
+NOTICE:  [seed] заказы: 2023-07-05
+NOTICE:  [seed] заказы: 2023-10-13
+NOTICE:  [seed] заказы: 2024-01-21
+NOTICE:  [seed] заказы: 2024-04-30
+NOTICE:  [seed] заказы: 2024-08-08
+NOTICE:  [seed] заказы: 2024-11-16
+NOTICE:  [seed] заказы: 2025-02-24
+NOTICE:  [seed] заказы: 2025-06-04
+NOTICE:  [seed] заказы: 2025-09-12
+NOTICE:  [seed] заказы: 2025-12-21
+NOTICE:  [seed] заказы: 2026-03-31
+NOTICE:  [seed] заказы: 2026-07-09
+NOTICE:  [seed] остатки: 2023-07-05
+NOTICE:  [seed] остатки: 2023-10-13
+NOTICE:  [seed] остатки: 2024-01-21
+NOTICE:  [seed] остатки: 2024-04-30
+NOTICE:  [seed] остатки: 2024-08-08
+NOTICE:  [seed] остатки: 2024-11-16
+NOTICE:  [seed] остатки: 2025-02-24
+NOTICE:  [seed] остатки: 2025-06-04
+NOTICE:  [seed] остатки: 2025-09-12
+NOTICE:  [seed] остатки: 2025-12-21
+NOTICE:  [seed] остатки: 2026-03-31
+NOTICE:  [seed] остатки: 2026-07-09
+SET
+ seed_history 
+--------------
+ 
+(1 row)
+
+SET
+CREATE VIEW
+             rule             | violations 
+------------------------------+------------
+ order_customer_time          |          0
+ order_store_time             |          0
+ order_store_channel          |          0
+ line_product_time            |          0
+ line_assortment              |          0
+ order_total_and_lines        |          0
+ line_amount_rule             |          0
+ payment_net_balance          |          0
+ unpaid_has_payment           |          0
+ payment_refund_bounds        |          0
+ payment_status_amount        |          0
+ return_after_delivery        |          0
+ return_qty_and_money         |          0
+ returned_order_complete      |          0
+ order_lifecycle              |          0
+ no_future_order_events       |          0
+ no_future_payment_events     |          0
+ no_future_return_events      |          0
+ promotion_status_dates       |          0
+ crm_delivery_time            |          0
+ crm_only_intentional_orphans |          0
+ crm_order_promotion_time     |          0
+ crm_duplicate_participation  |          0
+ inventory_reserved           |          0
+ inventory_store_product_time |          0
+ inventory_balance_equation   |          0
+ inventory_day_continuity     |          0
+ inventory_matches_movements  |          0
+(28 rows)
+
+NOTICE:  PASS: 28 бизнес-контрактов генератора
+DO
+     d      |                                                                                               simulate_day                                                                                               
+------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 2026-09-02 | {"paid": 0, "shipped": 2, "cancelled": 0, "delivered": 9, "city_moves": 10, "new_orders": 12, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-03 | {"paid": 5, "shipped": 5, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 12, "returns_new": 12, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-04 | {"paid": 9, "shipped": 6, "cancelled": 0, "delivered": 3, "city_moves": 10, "new_orders": 13, "returns_new": 13, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-05 | {"paid": 10, "shipped": 10, "cancelled": 0, "delivered": 6, "city_moves": 10, "new_orders": 14, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-06 | {"paid": 9, "shipped": 11, "cancelled": 0, "delivered": 6, "city_moves": 10, "new_orders": 14, "returns_new": 11, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-07 | {"paid": 9, "shipped": 12, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 12, "returns_new": 5, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-08 | {"paid": 7, "shipped": 13, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 12, "returns_new": 9, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-09 | {"paid": 8, "shipped": 10, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 12, "returns_new": 12, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-10 | {"paid": 8, "shipped": 7, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 12, "returns_new": 21, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-11 | {"paid": 7, "shipped": 10, "cancelled": 0, "delivered": 16, "city_moves": 10, "new_orders": 13, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-12 | {"paid": 9, "shipped": 15, "cancelled": 0, "delivered": 8, "city_moves": 10, "new_orders": 14, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-13 | {"paid": 6, "shipped": 4, "cancelled": 0, "delivered": 7, "city_moves": 10, "new_orders": 14, "returns_new": 8, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-14 | {"paid": 12, "shipped": 13, "cancelled": 0, "delivered": 22, "city_moves": 10, "new_orders": 12, "returns_new": 14, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-15 | {"paid": 11, "shipped": 9, "cancelled": 0, "delivered": 4, "city_moves": 10, "new_orders": 12, "returns_new": 7, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 289, "segment_changes": 20}
+ 2026-09-16 | {"paid": 10, "shipped": 13, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 12, "returns_new": 11, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-17 | {"paid": 6, "shipped": 15, "cancelled": 0, "delivered": 9, "city_moves": 10, "new_orders": 12, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-18 | {"paid": 13, "shipped": 11, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 13, "returns_new": 7, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-19 | {"paid": 8, "shipped": 10, "cancelled": 0, "delivered": 17, "city_moves": 10, "new_orders": 14, "returns_new": 19, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-20 | {"paid": 10, "shipped": 14, "cancelled": 0, "delivered": 9, "city_moves": 10, "new_orders": 14, "returns_new": 9, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-21 | {"paid": 10, "shipped": 9, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 12, "returns_new": 19, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-22 | {"paid": 13, "shipped": 12, "cancelled": 0, "delivered": 14, "city_moves": 10, "new_orders": 12, "returns_new": 18, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-23 | {"paid": 10, "shipped": 11, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 12, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-24 | {"paid": 9, "shipped": 13, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 12, "returns_new": 7, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-25 | {"paid": 6, "shipped": 10, "cancelled": 1, "delivered": 15, "city_moves": 10, "new_orders": 13, "returns_new": 16, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-26 | {"paid": 7, "shipped": 9, "cancelled": 0, "delivered": 14, "city_moves": 10, "new_orders": 14, "returns_new": 19, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-27 | {"paid": 9, "shipped": 11, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 14, "returns_new": 16, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-28 | {"paid": 11, "shipped": 10, "cancelled": 0, "delivered": 10, "city_moves": 10, "new_orders": 12, "returns_new": 24, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-29 | {"paid": 8, "shipped": 9, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 12, "returns_new": 12, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-09-30 | {"paid": 10, "shipped": 13, "cancelled": 0, "delivered": 10, "city_moves": 10, "new_orders": 12, "returns_new": 18, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-01 | {"paid": 6, "shipped": 12, "cancelled": 0, "delivered": 11, "city_moves": 10, "new_orders": 12, "returns_new": 22, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-02 | {"paid": 9, "shipped": 11, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 13, "returns_new": 14, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-03 | {"paid": 11, "shipped": 8, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 14, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-04 | {"paid": 3, "shipped": 13, "cancelled": 0, "delivered": 10, "city_moves": 10, "new_orders": 14, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-05 | {"paid": 10, "shipped": 11, "cancelled": 0, "delivered": 14, "city_moves": 10, "new_orders": 12, "returns_new": 13, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-06 | {"paid": 12, "shipped": 13, "cancelled": 0, "delivered": 16, "city_moves": 10, "new_orders": 12, "returns_new": 13, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-07 | {"paid": 8, "shipped": 7, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 12, "returns_new": 20, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-08 | {"paid": 8, "shipped": 15, "cancelled": 0, "delivered": 11, "city_moves": 10, "new_orders": 12, "returns_new": 13, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-09 | {"paid": 11, "shipped": 9, "cancelled": 0, "delivered": 8, "city_moves": 10, "new_orders": 13, "returns_new": 10, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-10 | {"paid": 7, "shipped": 13, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 14, "returns_new": 20, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-11 | {"paid": 6, "shipped": 10, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 14, "returns_new": 18, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-12 | {"paid": 12, "shipped": 10, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 12, "returns_new": 17, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-13 | {"paid": 8, "shipped": 14, "cancelled": 1, "delivered": 11, "city_moves": 10, "new_orders": 12, "returns_new": 19, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-14 | {"paid": 5, "shipped": 12, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 12, "returns_new": 12, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-15 | {"paid": 8, "shipped": 16, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 12, "returns_new": 17, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-16 | {"paid": 11, "shipped": 3, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 13, "returns_new": 21, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 302, "segment_changes": 20}
+ 2026-10-17 | {"paid": 8, "shipped": 7, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 14, "returns_new": 14, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-18 | {"paid": 8, "shipped": 13, "cancelled": 0, "delivered": 10, "city_moves": 10, "new_orders": 14, "returns_new": 16, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-19 | {"paid": 10, "shipped": 16, "cancelled": 0, "delivered": 5, "city_moves": 10, "new_orders": 12, "returns_new": 22, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-20 | {"paid": 8, "shipped": 13, "cancelled": 0, "delivered": 13, "city_moves": 10, "new_orders": 12, "returns_new": 10, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-21 | {"paid": 7, "shipped": 8, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 12, "returns_new": 18, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-22 | {"paid": 11, "shipped": 16, "cancelled": 0, "delivered": 18, "city_moves": 10, "new_orders": 12, "returns_new": 11, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-23 | {"paid": 8, "shipped": 10, "cancelled": 0, "delivered": 9, "city_moves": 10, "new_orders": 13, "returns_new": 26, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-24 | {"paid": 7, "shipped": 14, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 14, "returns_new": 14, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-25 | {"paid": 8, "shipped": 6, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 14, "returns_new": 12, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-26 | {"paid": 13, "shipped": 10, "cancelled": 0, "delivered": 17, "city_moves": 10, "new_orders": 12, "returns_new": 24, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-27 | {"paid": 8, "shipped": 10, "cancelled": 0, "delivered": 9, "city_moves": 10, "new_orders": 12, "returns_new": 28, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-28 | {"paid": 7, "shipped": 14, "cancelled": 0, "delivered": 7, "city_moves": 10, "new_orders": 12, "returns_new": 16, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-29 | {"paid": 8, "shipped": 14, "cancelled": 0, "delivered": 12, "city_moves": 10, "new_orders": 12, "returns_new": 18, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-30 | {"paid": 8, "shipped": 5, "cancelled": 0, "delivered": 15, "city_moves": 10, "new_orders": 13, "returns_new": 12, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-10-31 | {"paid": 11, "shipped": 12, "cancelled": 0, "delivered": 19, "city_moves": 10, "new_orders": 14, "returns_new": 15, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+ 2026-11-01 | {"paid": 9, "shipped": 13, "cancelled": 0, "delivered": 4, "city_moves": 10, "new_orders": 14, "returns_new": 30, "amount_fixes": 3, "late_arriving": 2, "inventory_rows": 283, "segment_changes": 20}
+(61 rows)
+
+SET
+CREATE VIEW
+             rule             | violations 
+------------------------------+------------
+ order_customer_time          |          0
+ order_store_time             |          0
+ order_store_channel          |          0
+ line_product_time            |          0
+ line_assortment              |          0
+ order_total_and_lines        |          0
+ line_amount_rule             |          0
+ payment_net_balance          |          0
+ unpaid_has_payment           |          0
+ payment_refund_bounds        |          0
+ payment_status_amount        |          0
+ return_after_delivery        |          0
+ return_qty_and_money         |          0
+ returned_order_complete      |          0
+ order_lifecycle              |          0
+ no_future_order_events       |          0
+ no_future_payment_events     |          0
+ no_future_return_events      |          0
+ promotion_status_dates       |          0
+ crm_delivery_time            |          0
+ crm_only_intentional_orphans |          0
+ crm_order_promotion_time     |          0
+ crm_duplicate_participation  |          0
+ inventory_reserved           |          0
+ inventory_store_product_time |          0
+ inventory_balance_equation   |          0
+ inventory_day_continuity     |          0
+ inventory_matches_movements  |          0
+(28 rows)
+
+NOTICE:  PASS: 28 бизнес-контрактов генератора
+DO
+ orders_with_old_watermark 
+---------------------------
+                         0
+(1 row)
+
+ lines_with_excess_returns 
+---------------------------
+                         0
+(1 row)
+
+ promotions_with_future_watermark 
+----------------------------------
+                                0
+(1 row)
+
+ orders_with_reversed_lifecycle 
+--------------------------------
+                              0
+(1 row)
+
+DO
+ lived_days | first_day  |  last_day  
+------------+------------+------------
+         62 | 2026-09-01 | 2026-11-01
+(1 row)
+
+NOTICE:  Повтор дня отклонён: день 2026-11-01 уже прожит; перезалив дня — операция DWH, не генератора (§2.5)
+NOTICE:  Пропуск дня отклонён: ожидался следующий день 2026-11-02, получен 2026-11-03
+DO
+NOTICE:  PASS: открытие/закрытие, разнообразие корзин, split, частичные выплаты и намеренные сироты CRM
+DO
+NOTICE:  [seed] stores… 2026-11-08 16:51:30.673035+00
+NOTICE:  [seed] categories… 2026-11-08 16:51:30.673778+00
+NOTICE:  [seed] products… 2026-11-08 16:51:30.687531+00
+NOTICE:  [seed] customers… 2026-11-08 16:51:30.692691+00
+NOTICE:  [seed] assortment… 2026-11-08 16:51:30.694208+00
+NOTICE:  [seed] promotions… 2026-11-08 16:51:30.704262+00
+NOTICE:  [seed] заказы: 2026-08-19
+NOTICE:  [seed] остатки: 2026-08-19
+ seed_history 
+--------------
+ 
+(1 row)
+
+CREATE VIEW
+SELECT 1
+SET
+NOTICE:  [seed] stores… 2026-11-08 16:51:31.369113+00
+NOTICE:  [seed] categories… 2026-11-08 16:51:31.370056+00
+NOTICE:  [seed] products… 2026-11-08 16:51:31.385856+00
+NOTICE:  [seed] customers… 2026-11-08 16:51:31.391027+00
+NOTICE:  [seed] assortment… 2026-11-08 16:51:31.39287+00
+NOTICE:  [seed] promotions… 2026-11-08 16:51:31.404322+00
+NOTICE:  [seed] заказы: 2026-08-19
+NOTICE:  [seed] остатки: 2026-08-19
+ seed_history 
+--------------
+ 
+(1 row)
+
+SET
+NOTICE:  PASS: воспроизводимость seed и независимость от TZ
+DO
+PASS: проверки генератора в изолированной базе.

@@ -1,0 +1,21 @@
+  object   | count  
+-----------+--------
+ returns   |   2020
+ orders    |  10939
+ payments  |  11358
+ lines     |  31728
+ inventory | 190668
+(5 rows)
+
+ new_store_orders 
+------------------
+               20
+(1 row)
+
+       status       | count 
+--------------------+-------
+ captured           |  9740
+ partially_refunded |  1486
+ refunded           |   132
+(3 rows)
+

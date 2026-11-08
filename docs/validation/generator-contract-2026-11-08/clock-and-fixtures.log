@@ -1,0 +1,164 @@
+NOTICE:  schema "crm" does not exist, skipping
+DROP SCHEMA
+NOTICE:  schema "erp" does not exist, skipping
+DROP SCHEMA
+NOTICE:  schema "meta" does not exist, skipping
+DROP SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE SEQUENCE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+GRANT
+GRANT
+ALTER DEFAULT PRIVILEGES
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+NOTICE:  function meta.seed_history(date) does not exist, skipping
+DROP FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+INSERT 0 1
+INSERT 0 1
+INSERT 0 15
+INSERT 0 50000
+INSERT 0 1
+INSERT 0 1
+INSERT 0 15
+INSERT 0 15
+INSERT 0 1
+                                                                                             simulate_day                                                                                             
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"paid": 0, "shipped": 0, "cancelled": 0, "delivered": 0, "city_moves": 10, "new_orders": 422, "returns_new": 0, "amount_fixes": 0, "late_arriving": 2, "inventory_rows": 15, "segment_changes": 20}
+(1 row)
+
+ orders | paid | negative_lags | wrong_paid_time 
+--------+------+---------------+-----------------
+    420 |   71 |             0 |               0
+(1 row)
+
+DO
+SET
+CREATE VIEW
+             rule             | violations 
+------------------------------+------------
+ order_customer_time          |          0
+ order_store_time             |          0
+ order_store_channel          |          0
+ line_product_time            |          0
+ line_assortment              |          0
+ order_total_and_lines        |          0
+ line_amount_rule             |          0
+ payment_net_balance          |          0
+ unpaid_has_payment           |          0
+ payment_refund_bounds        |          0
+ payment_status_amount        |          0
+ return_after_delivery        |          0
+ return_qty_and_money         |          0
+ returned_order_complete      |          0
+ order_lifecycle              |          0
+ no_future_order_events       |          0
+ no_future_payment_events     |          0
+ no_future_return_events      |          0
+ promotion_status_dates       |          0
+ crm_delivery_time            |          0
+ crm_only_intentional_orphans |          0
+ crm_order_promotion_time     |          0
+ crm_duplicate_participation  |          0
+ inventory_reserved           |          0
+ inventory_store_product_time |          0
+ inventory_balance_equation   |          0
+ inventory_day_continuity     |          0
+ inventory_matches_movements  |          0
+(28 rows)
+
+NOTICE:  PASS: 28 бизнес-контрактов генератора
+DO
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+TRUNCATE TABLE
+GRANT
+GRANT
+INSERT 0 1
+INSERT 0 4
+INSERT 0 2
+INSERT 0 2
+INSERT 0 4
+INSERT 0 5
+INSERT 0 3
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+INSERT 0 2
+UPDATE 1
+UPDATE 1

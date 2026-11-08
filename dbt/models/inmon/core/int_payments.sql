@@ -13,6 +13,7 @@ with deduped as (
         method,
         amount,
         status,
+        refunded_amount,
         refunded_at,
         updated_at,
         row_number() over (
@@ -30,6 +31,7 @@ real_changes as (
         method,
         amount,
         status,
+        refunded_amount,
         refunded_at,
         updated_at,
         concat_ws(
@@ -39,6 +41,7 @@ real_changes as (
             coalesce(cast(method as varchar), '-'),
             coalesce(cast(amount as varchar), '-'),
             coalesce(cast(status as varchar), '-'),
+            coalesce(cast(refunded_amount as varchar), '-'),
             coalesce(cast(refunded_at as varchar), '-')
         )     as signature,
         lag(concat_ws(
@@ -48,6 +51,7 @@ real_changes as (
             coalesce(cast(method as varchar), '-'),
             coalesce(cast(amount as varchar), '-'),
             coalesce(cast(status as varchar), '-'),
+            coalesce(cast(refunded_amount as varchar), '-'),
             coalesce(cast(refunded_at as varchar), '-')
         ))
             over (
@@ -66,6 +70,7 @@ changes_only as (
         method,
         amount,
         status,
+        refunded_amount,
         refunded_at,
         updated_at
     from real_changes
@@ -80,6 +85,7 @@ with_validity as (
         method,
         amount,
         status,
+        refunded_amount,
         refunded_at,
         updated_at,
         lead(updated_at) over (
@@ -100,6 +106,7 @@ select
     method,
     amount,
     status,
+    refunded_amount,
     refunded_at,
     updated_at as valid_from,
     valid_to,

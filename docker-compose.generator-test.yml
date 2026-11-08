@@ -1,0 +1,30 @@
+# Изолированные проверки генератора: нет портов и общих томов рабочего стенда.
+services:
+  postgres:
+    image: postgres:17-alpine
+    network_mode: none
+    environment:
+      POSTGRES_DB: retailco
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+      TZ: UTC
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "timezone=UTC"]
+    mem_limit: 768m
+    volumes:
+      - generator_data:/var/lib/postgresql/data
+      - ./scripts/pg_init.sql:/docker-entrypoint-initdb.d/10_pg_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d retailco"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  dbt:
+    image: data-modeling-guide-dbt:latest
+    network_mode: none
+    working_dir: /app
+    volumes:
+      - ./dbt:/app
+      - ./scripts:/scripts:ro
+    entrypoint: ["sleep", "infinity"]
+volumes:
+  generator_data:

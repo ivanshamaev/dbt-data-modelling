@@ -1,0 +1,4 @@
+docker compose exec -T postgres psql -U postgres -d retailco -v ON_ERROR_STOP=1 < sql/00_init_sources.sql
+docker compose exec -T postgres psql -U postgres -d retailco -v ON_ERROR_STOP=1 < sql/01_generator.sql
+bash scripts/resources_report.sh
+./scripts/check_generator.sh

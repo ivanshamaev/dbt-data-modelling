@@ -1,6 +1,14 @@
 -- Актуальное состояние платежа должно учитывать коррекции каждого исходного поля.
 with current_payments as (
-    select payment_id, order_id, paid_ts, method, amount, status, refunded_at
+    select
+        payment_id,
+        order_id,
+        paid_ts,
+        method,
+        amount,
+        status,
+        refunded_amount,
+        refunded_at
     from {{ ref('int_payments') }}
     where is_current
 )
@@ -17,4 +25,5 @@ where
     or not (p.method <=> s.method)
     or not (p.amount <=> s.amount)
     or not (p.status <=> s.status)
+    or not (p.refunded_amount <=> s.refunded_amount)
     or not (p.refunded_at <=> s.refunded_at)

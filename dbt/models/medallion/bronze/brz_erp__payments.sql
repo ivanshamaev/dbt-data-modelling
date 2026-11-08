@@ -6,7 +6,7 @@
     partition_type='Expr',
 ) }}
 
--- L3.2 · brz_erp__payments: платежи; сплиты ~7%, refund'ы меняют status/refunded_at
+-- L3.2 · brz_erp__payments: платежи; сплиты ~7%, возвраты меняют status/refunded_amount/refunded_at
 -- с бампом updated_at (паттерн №9).
 -- L53: сохраняем каждую наблюдённую версию; повтор не меняет её время загрузки.
 with incoming as (
@@ -17,6 +17,7 @@ with incoming as (
         method,
         amount,
         status,
+        refunded_amount,
         refunded_at,
         updated_at,
         {{ bronze_tech('erp', 'updated_at') }}
@@ -31,6 +32,7 @@ select
     s.method,
     s.amount,
     s.status,
+    s.refunded_amount,
     s.refunded_at,
     s.updated_at,
     s._batch_id,
@@ -45,6 +47,7 @@ from incoming s
     'method',
     'amount',
     'status',
+    'refunded_amount',
     'refunded_at',
     'updated_at'
 ]) }}

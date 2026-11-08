@@ -1,0 +1,17 @@
+== [tests/inmon_payments_current_matches_stage.sql] FAIL
+L:  23 | P:  24 |  PRS | Line 23, Position 24: Found unparsable section: '<=>
+                       | s.order_id'
+L:  24 | P:  23 |  PRS | Line 24, Position 23: Found unparsable section: '<=>
+                       | s.paid_ts'
+L:  25 | P:  22 |  PRS | Line 25, Position 22: Found unparsable section: '<=>
+                       | s.method'
+L:  26 | P:  22 |  PRS | Line 26, Position 22: Found unparsable section: '<=>
+                       | s.amount'
+L:  27 | P:  22 |  PRS | Line 27, Position 22: Found unparsable section: '<=>
+                       | s.status'
+L:  28 | P:  31 |  PRS | Line 28, Position 31: Found unparsable section: '<=>
+                       | s.refunded_amount'
+L:  29 | P:  27 |  PRS | Line 29, Position 27: Found unparsable section: '<=>
+                       | s.refunded_at'
+WARNING: Parsing errors found and dialect is set to 'mysql'. Have you configured your dialect correctly?
+All Finished!

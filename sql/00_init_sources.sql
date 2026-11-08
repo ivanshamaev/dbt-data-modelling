@@ -1,8 +1,8 @@
 -- ============================================================================
 -- RetailCo: схемы источников ERP (9 таблиц) и CRM (2 таблицы) + meta генератора
--- План §2.2/§2.2b. Денежные суммы — BIGINT в минорных единицах, время — UTC (timestamptz).
--- v2.2: updated_at добавлен на все мутабельные таблицы (самодокументируемая
---       инкрементальность watermark, §11.6.6 плана).
+-- Денежные суммы — BIGINT в рублях, время — UTC (timestamptz).
+-- v4.0: частичные выплаты, точный эффективный процент скидки,
+--       причинная CRM-доставка и переносимый складской баланс.
 -- Пересоздание с нуля: make sources (drop + create + функции генератора).
 -- ============================================================================
 
@@ -42,7 +42,7 @@ CREATE TABLE erp.products (
     sku          text NOT NULL UNIQUE,
     category_id  integer NOT NULL REFERENCES erp.categories(category_id),
     brand        text NOT NULL,
-    list_price   bigint NOT NULL CHECK (list_price > 0),   -- минорные единицы
+    list_price   bigint NOT NULL CHECK (list_price > 0),   -- рубли
     is_active    boolean NOT NULL DEFAULT true,
     launched_at  date NOT NULL,
     updated_at   timestamptz NOT NULL DEFAULT now()          -- бамп при переносе категории
@@ -80,7 +80,7 @@ CREATE TABLE erp.order_lines (
     product_id    integer NOT NULL REFERENCES erp.products(product_id),
     qty           integer NOT NULL CHECK (qty > 0),
     unit_price    bigint NOT NULL CHECK (unit_price >= 0),
-    discount_pct  numeric(5,2) NOT NULL DEFAULT 0 CHECK (discount_pct >= 0 AND discount_pct <= 100),
+    discount_pct  numeric(12,8) NOT NULL DEFAULT 0 CHECK (discount_pct >= 0 AND discount_pct <= 100),
     line_amount   bigint NOT NULL,               -- = round(qty*unit_price*(1-discount_pct/100))
     updated_at    timestamptz NOT NULL DEFAULT now()
 );
@@ -91,9 +91,11 @@ CREATE TABLE erp.payments (
     paid_ts     timestamptz NOT NULL,
     method      text NOT NULL CHECK (method IN ('card', 'cash', 'online', 'gift')),
     amount      bigint NOT NULL CHECK (amount >= 0),
-    status      text NOT NULL CHECK (status IN ('authorized', 'captured', 'refunded')),
+    status      text NOT NULL CHECK (status IN ('authorized', 'captured', 'partially_refunded', 'refunded')),
     refunded_at timestamptz,
-    updated_at  timestamptz NOT NULL DEFAULT now()
+    updated_at  timestamptz NOT NULL DEFAULT now(),
+    -- Накопленный возврат денег; amount сохраняет исходное списание.
+    refunded_amount bigint NOT NULL DEFAULT 0 CHECK (refunded_amount >= 0 AND refunded_amount <= amount)
 );
 
 CREATE TABLE erp.returns (
@@ -105,13 +107,13 @@ CREATE TABLE erp.returns (
     refund_amount bigint NOT NULL CHECK (refund_amount >= 0)
 );
 
--- ~34–35 млн строк: 14 офлайн × ~2500 активных SKU × 1155 дней × матрица ~85%
+-- Миллионы снимков: объём зависит от дат запуска SKU, работы магазинов и ассортимента.
 CREATE TABLE erp.inventory (
     snap_date     date NOT NULL,
     store_id      integer NOT NULL REFERENCES erp.stores(store_id),
     product_id    integer NOT NULL REFERENCES erp.products(product_id),
     qty_on_hand   integer NOT NULL CHECK (qty_on_hand >= 0),
-    qty_reserved  integer NOT NULL CHECK (qty_reserved >= 0) DEFAULT 0,
+    qty_reserved  integer NOT NULL CHECK (qty_reserved >= 0 AND qty_reserved <= qty_on_hand) DEFAULT 0,
     PRIMARY KEY (snap_date, store_id, product_id)
 );
 
@@ -135,7 +137,7 @@ CREATE TABLE crm.promo_participation (
     promo_id    text NOT NULL REFERENCES crm.promotions(promo_id),
     order_no    text NOT NULL,                   -- «CRM знает только номер»: без FK к erp.orders
     attached_at timestamptz NOT NULL,
-    sync_ts     timestamptz NOT NULL             -- когда запись доехала до выгрузки (лаг 1–3 дня)
+    sync_ts     timestamptz NOT NULL CHECK (sync_ts >= attached_at)
 );
 
 -- ---------------------------------------------------------------------------
@@ -167,6 +169,45 @@ CREATE TABLE meta.assortment_cnt (
     cnt      integer NOT NULL
 );
 
+-- Применённые условия фиксируются при покупке, независимо от задержки CRM.
+CREATE TABLE meta.order_promotions (
+    order_id bigint PRIMARY KEY REFERENCES erp.orders(order_id),
+    promo_id text NOT NULL REFERENCES crm.promotions(promo_id),
+    mechanics text NOT NULL,
+    discount_value numeric(10,2) NOT NULL,
+    attached_at timestamptz NOT NULL,
+    sync_due timestamptz NOT NULL CHECK (sync_due >= attached_at)
+);
+
+CREATE TABLE meta.order_adjustments (
+    order_id bigint PRIMARY KEY REFERENCES erp.orders(order_id),
+    discount_pct integer NOT NULL DEFAULT 0 CHECK (discount_pct BETWEEN 0 AND 30),
+    updated_at timestamptz NOT NULL
+);
+
+-- Внутренний журнал объясняет изменение остатков, не является источником DWH.
+CREATE TABLE meta.inventory_movements (
+    snap_date date NOT NULL,
+    store_id integer NOT NULL REFERENCES erp.stores(store_id),
+    product_id integer NOT NULL REFERENCES erp.products(product_id),
+    opening_qty integer NOT NULL CHECK (opening_qty >= 0),
+    received_qty integer NOT NULL CHECK (received_qty >= 0),
+    shipped_qty integer NOT NULL CHECK (shipped_qty >= 0),
+    returned_qty integer NOT NULL CHECK (returned_qty >= 0),
+    closing_qty integer NOT NULL CHECK (closing_qty >= 0),
+    reserved_qty integer NOT NULL CHECK (reserved_qty BETWEEN 0 AND closing_qty),
+    PRIMARY KEY (snap_date, store_id, product_id),
+    CHECK (closing_qty = opening_qty + received_qty - shipped_qty + returned_qty)
+);
+
+CREATE TABLE meta.inventory_balance (
+    store_id integer NOT NULL,
+    product_id integer NOT NULL,
+    qty_on_hand integer NOT NULL,
+    qty_reserved integer NOT NULL DEFAULT 0,
+    PRIMARY KEY (store_id, product_id)
+);
+
 CREATE SEQUENCE meta.seq_order         START 1;   -- order_id
 CREATE SEQUENCE meta.seq_order_no      START 1;   -- числовая часть order_no
 CREATE SEQUENCE meta.seq_line          START 1;
@@ -177,6 +218,8 @@ CREATE SEQUENCE meta.seq_participation START 1;
 -- Индексы под watermark-инжест (bronze читает по updated_at / дате события)
 CREATE INDEX orders_order_ts_idx   ON erp.orders (order_ts);
 CREATE INDEX orders_status_idx     ON erp.orders (status);
+CREATE INDEX orders_paid_idx       ON erp.orders (paid_at);
+CREATE INDEX orders_shipped_idx    ON erp.orders (shipped_at);
 CREATE INDEX orders_updated_idx    ON erp.orders (updated_at);
 CREATE INDEX lines_order_idx       ON erp.order_lines (order_id);
 CREATE INDEX lines_updated_idx     ON erp.order_lines (updated_at);

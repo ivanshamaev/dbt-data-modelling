@@ -15,8 +15,8 @@ SELECT meta.simulate_day(date '2026-09-02');
 SELECT count(*) AS orders,count(paid_at) AS paid,
  count(*) FILTER(WHERE paid_at<order_ts) AS negative_lags,
  count(*) FILTER(WHERE paid_at IS NOT NULL AND paid_at<>order_ts+interval '5 minute') AS wrong_paid_time
-FROM erp.orders;
+FROM erp.orders WHERE order_ts::date = date '2026-09-02';
 DO $$ BEGIN
  IF NOT EXISTS(SELECT 1 FROM erp.orders WHERE paid_at IS NOT NULL) THEN RAISE EXCEPTION 'Не проверена ветка оплаты'; END IF;
- IF EXISTS(SELECT 1 FROM erp.orders WHERE paid_at IS NOT NULL AND paid_at<>order_ts+interval '5 minute') THEN RAISE EXCEPTION 'L66: неверное время оплаты нового заказа'; END IF;
+ IF EXISTS(SELECT 1 FROM erp.orders WHERE order_ts::date=date '2026-09-02' AND paid_at IS NOT NULL AND paid_at<>order_ts+interval '5 minute') THEN RAISE EXCEPTION 'L66: неверное время оплаты нового заказа'; END IF;
 END $$;

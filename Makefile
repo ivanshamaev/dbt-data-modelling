@@ -25,7 +25,10 @@ logs: ## хвост логов всех сервисов
 
 # --- источники и генератор ---------------------------------------------------
 
-.PHONY: sources reset seed simulate-day live
+.PHONY: sources reset seed simulate-day live generator-check
+generator-check: ## бизнес-контракты генератора в отдельном PostgreSQL без рабочего стенда
+	./scripts/check_generator.sh
+
 sources: ## применить DDL источников + функции генератора (пересоздаёт схемы!)
 	$(PSQL) < sql/00_init_sources.sql
 	$(PSQL) < sql/01_generator.sql
